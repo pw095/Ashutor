@@ -1,7 +1,6 @@
 .read tbl_item_statistics.sql;
 .read tbl_item_sheet_file.sql;
 
-.read tbl_sheet.sql;
 .read tbl_fine_item.sql;
 
 .read tbl_file.sql;
