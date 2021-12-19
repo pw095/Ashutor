@@ -1,3 +1,7 @@
+DROP TABLE IF EXISTS tbl_item_file_cf_statistic;
+DROP TABLE IF EXISTS tbl_item_file_cf_match;
+DROP TABLE IF EXISTS tbl_item_file_cf;
+
 DROP TABLE IF EXISTS tbl_item_file_pl_statistic;
 DROP TABLE IF EXISTS tbl_item_file_pl_match;
 DROP TABLE IF EXISTS tbl_item_file_pl;
@@ -17,5 +21,8 @@ DROP TABLE IF EXISTS tbl_pure_item;
 DROP TABLE IF EXISTS tbl_word;
 
 DROP TABLE IF EXISTS tmp_item_file_balance;
+
+DROP TABLE IF EXISTS tmp_item_file_cf_match;
+DROP TABLE IF EXISTS tmp_item_file_pl_match;
 DROP TABLE IF EXISTS tmp_item_file_balance_match;
 
