@@ -1,3 +1,7 @@
+DROP TABLE IF EXISTS tbl_item_file_pl_statistic;
+DROP TABLE IF EXISTS tbl_item_file_pl_match;
+DROP TABLE IF EXISTS tbl_item_file_pl;
+
 DROP TABLE IF EXISTS tbl_item_file_balance_statistic;
 DROP TABLE IF EXISTS tbl_item_file_balance_match;
 DROP TABLE IF EXISTS tbl_item_file_balance;
