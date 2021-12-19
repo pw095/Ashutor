@@ -9,7 +9,7 @@ SELECT
        ifb.ifb_id,
        stmt.report_date,
        ROUND(stmt.item_stat_value) AS item_stat_value
-  FROM src.raw_statement_val stmt
+  FROM src.stg_statement_val stmt
        JOIN
        tbl_item_file_balance ifb
            ON ifb.ifb_number = stmt.statement_number

@@ -13,4 +13,5 @@ DROP TABLE IF EXISTS tbl_pure_item;
 DROP TABLE IF EXISTS tbl_word;
 
 DROP TABLE IF EXISTS tmp_item_file_balance;
+DROP TABLE IF EXISTS tmp_item_file_balance_match;
 

@@ -7,14 +7,14 @@ INSERT OR IGNORE
 SELECT
        master.ifb_id AS master_ifb_id,
        depend.ifb_id AS depend_ifb_id
-  FROM src.raw_stat_hierarhy hier
+  FROM src.stg_stat_hierarhy hier
        JOIN
        tbl_emitter emit
            ON emit.emitter_name = hier.emitent
        JOIN
        tbl_file master_file
            ON master_file.file_emitter_id = emit.emitter_id
-          AND master_file.file_name = hier.master_file || '.xlsx'
+          AND master_file.file_name = hier.master_file
        JOIN
        tbl_item_file_balance master
            ON master.ifb_number = hier.master_number
@@ -22,7 +22,7 @@ SELECT
        JOIN
        tbl_file depend_file
            ON depend_file.file_emitter_id = emit.emitter_id
-          AND depend_file.file_name = hier.depend_file || '.xlsx'
+          AND depend_file.file_name = hier.depend_file
        JOIN
        tbl_item_file_balance depend
            ON depend.ifb_number = hier.depend_number

@@ -6,4 +6,4 @@ INSERT OR IGNORE
 SELECT
        DISTINCT
        emitent
-  FROM src.raw_statement
+  FROM src.stg_statement

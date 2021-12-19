@@ -10,7 +10,7 @@ SELECT
   FROM (SELECT
                statement,
                pure_statement
-          FROM src.raw_statement
+          FROM src.stg_statement
          WHERE statement_number != 0
          UNION
         SELECT

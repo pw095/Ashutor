@@ -25,17 +25,18 @@ SELECT
                SUBSTR(pure_statement, space_ind+1)    AS file_currency,
                SUBSTR(pure_statement, 1, space_ind-1) AS file_factor
           FROM (SELECT
-                       file_name || '.xlsx'            AS file_name,
+                       file_name,
                        emit.emitter_id,
-                       file_name || '-12-31'           AS file_date,
+                       SUBSTR(file_name, 1, file_extension_pos-1) || '-12-31' AS file_date,
                        pure_statement,
                        INSTR(pure_statement, ' ') AS space_ind
                   FROM (SELECT
                                DISTINCT
                                emitent,
                                file_name,
+                               INSTR(file_name, '.xlsx') AS file_extension_pos,
                                pure_statement
-                          FROM src.raw_statement
+                          FROM src.stg_statement
                          WHERE statement_number = 0) raw
                        JOIN
                        tbl_emitter emit

@@ -9,7 +9,7 @@ INSERT
     ifb_parent_number,
     ifb_subtotal_flag
   )
-WITH
+WITH RECURSIVE
      w_raw AS
      (
          SELECT
@@ -54,10 +54,10 @@ WITH
                                 CAST(SUBSTR(statement_level, 1, 2) AS INTEGER) AS major_level,
                                 CAST(SUBSTR(statement_level, 3, 2) AS INTEGER) AS minor_level,
                                 statement_level
-                           FROM src.raw_statement stmt
+                           FROM src.stg_statement stmt
                                 JOIN
                                 tbl_file file
-                                    ON file.file_name = stmt.file_name || '.xlsx'
+                                    ON file.file_name = stmt.file_name
                                 JOIN
                                 tbl_item item
                                     ON item.item_name = stmt.statement
