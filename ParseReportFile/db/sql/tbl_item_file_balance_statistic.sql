@@ -15,7 +15,7 @@ SELECT
            ON ifb.ifb_number = stmt.statement_number
        JOIN
        tbl_file file
-           ON file.file_id = ifb_file_id
+           ON file.file_id = ifb.ifb_file_id
           AND file.file_name = stmt.file_name
        JOIN
        tbl_emitter emit
