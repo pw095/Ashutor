@@ -1,4 +1,4 @@
---DROP TABLE IF EXISTS tbl_item_statistics;
+DROP TABLE IF EXISTS tbl_item_file_balance_statistic;
 DROP TABLE IF EXISTS tbl_item_file_balance_match;
 DROP TABLE IF EXISTS tbl_item_file_balance;
 
