@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class FileInfo {
+    public String emitterName;
     public String fileName;
     public LocalDate fileDate;
     public String fileCurrency;
@@ -40,6 +41,8 @@ public class FileInfo {
 //        FileInfo fileInfo = new FileInfo();
 
         fileInfo.fileName = path.getFileName().toString();
+        fileInfo.emitterName = path.getParent().getFileName().toString();
+
 //        System.out.println(fileInfo.fileName);
 
         fileInfo.fileDate = LocalDate.of(Integer.parseInt(fileInfo.fileName.replaceAll("\\.xlsx", "")), Month.DECEMBER, 31);
@@ -69,8 +72,12 @@ public class FileInfo {
                     rawBalanceSheetInfo.reportDateList = new ArrayList<>();
                     rawBalanceSheetInfo.reportInfo = new ArrayList<>();
 //                    fileInfo.reportDateList = new ArrayList<>();
-
+                    int maxColumnIndex = 0;
                     for (Row row : workSheet) { //  Первая строка содержит информацию о множителе (млн, тыс), валюте и отчётных годах
+
+                        for (Cell cell : row) {
+                            maxColumnIndex = maxColumnIndex > cell.getColumnIndex() ? maxColumnIndex : cell.getColumnIndex();
+                        }
                         if (row.getRowNum() == 0) {
                             for (Cell cell : row) { // В первом столбце всегда множитель и валюта
                                 if (cell.getColumnIndex() == 0) {
@@ -101,22 +108,34 @@ public class FileInfo {
                             }
                         } else { // Статьи и показатели отчётности
                             List<Integer> reportLine = new ArrayList<>();
-                            for (Cell cell : row) {
-                                int columnIndex = cell.getColumnIndex();
+
+//                            for (Cell cell : row) {
+                            for (int columnIndex = 0; columnIndex <= maxColumnIndex; ++columnIndex) {
+//                                int columnIndex = cell.getColumnIndex();
+                                Cell cell = row.getCell(columnIndex);
                                 if (columnIndex == 0) { // В первом столбце всегда статьи
                                     rawBalanceSheetInfo.itemList.add(cell.getStringCellValue());
+//                                    System.out.print(cell.getStringCellValue() + " ");
                                 } else { // Во всех прочих показатели отчётности
-                                    if (cell.getCellType() == CellType.NUMERIC) {
-                                        reportLine.add((int) cell.getNumericCellValue());
-                                    } else {
-                                        reportLine.add(0);
+                                    try {
+                                        if (cell.getCellType() == CellType.NUMERIC) {
+//                                            System.out.print("max_column_index = " + maxColumnIndex + " column_index = " + (columnIndex-1) + " " + (int) cell.getNumericCellValue());
+                                            reportLine.add(columnIndex-1, (int) cell.getNumericCellValue());
+                                        } else {
+//                                            System.out.print("max_column_index = " + maxColumnIndex + " column_index = " + (columnIndex-1) + " 0000000");
+                                            reportLine.add(columnIndex-1, 0);
+                                        }
+                                    } catch (NullPointerException e) {
+//                                        System.out.print("max_column_index = " + maxColumnIndex + " column_index = " + (columnIndex-1) + " 0000000");
+                                        reportLine.add(columnIndex-1, 0);
                                     }
                                 }
+//                                System.out.println();
                             }
                             rawBalanceSheetInfo.reportInfo.add(reportLine);
                         }
                     }
-                    System.out.println("## " + fileInfo.balanceSheetInfoList.size());
+//                    System.out.println("## " + fileInfo.balanceSheetInfoList.size());
                     fileInfo.balanceSheetInfoList.add(rawBalanceSheetInfo);
                 }
             }
@@ -131,6 +150,7 @@ public class FileInfo {
     public FileInfo(FileInfo fileInfo) {
 
         this.fileName = fileInfo.fileName;
+        this.emitterName = fileInfo.emitterName;
         this.fileDate = fileInfo.fileDate;
         this.fileCurrency = fileInfo.fileCurrency;
         this.fileFactor = fileInfo.fileFactor;
@@ -151,7 +171,8 @@ public class FileInfo {
 
         richFileInfo.balanceSheetInfoList = new ArrayList<>();
         RawBalanceSheetInfo rawBalanceSheetInfo = (RawBalanceSheetInfo) rawFileInfo.balanceSheetInfoList.get(0);
-
+//        System.out.println("Size1 =" + rawBalanceSheetInfo.itemList.size());
+//        System.out.println("Size1 =" + rawBalanceSheetInfo.reportInfo.size());
         for (int k = rawBalanceSheetInfo.itemList.size() - 1; k >= 0; --k) {
             if (rawBalanceSheetInfo.itemList.get(k).isEmpty()) {
                 rawBalanceSheetInfo.reportInfo.remove(k);
@@ -167,21 +188,29 @@ public class FileInfo {
         } else if (pureList.contains("долгосрочные обязательства")) {
             int ii = pureList.indexOf("долгосрочные обязательства");
             rawBalanceSheetInfo.itemList.add(ii, "Обязательства");
-            rawBalanceSheetInfo.reportInfo.add(ii, Arrays.asList(0, 0));
+            List<Integer> list = new ArrayList<>();
+            for (int ind=0; ind < rawBalanceSheetInfo.reportInfo.get(ii).size(); ++ind) {
+                list.add(0);
+            }
+            rawBalanceSheetInfo.reportInfo.add(ii, list);
         } else if (pureList.contains("non current liabilities")) {
             int ii = pureList.indexOf("non current liabilities");
             rawBalanceSheetInfo.itemList.add(ii, "Liabilities");
-            rawBalanceSheetInfo.reportInfo.add(ii, Arrays.asList(0, 0));
+            List<Integer> list = new ArrayList<>();
+            for (int ind=0; ind < rawBalanceSheetInfo.reportInfo.get(ii).size(); ++ind) {
+                list.add(0);
+            }
+            rawBalanceSheetInfo.reportInfo.add(ii, list);
         }
 
         richBalanceSheetInfo.reportDateList = new ArrayList<>(rawBalanceSheetInfo.reportDateList);
         richBalanceSheetInfo.itemInfoList = new ArrayList<>();
-//        richBalanceSheetInfo.reportDateList.addAll(rawBalanceSheetInfo.reportDateList);
 
         for (int ind = 0; ind < rawBalanceSheetInfo.reportInfo.size(); ++ind) {
 
             ItemInfo itemInfo = new ItemInfo();
             itemInfo.itemIndex = ind;
+//            System.out.println("ind = " + ind + " " + rawBalanceSheetInfo.itemList.get(ind));
             itemInfo.itemName = rawBalanceSheetInfo.itemList.get(ind);
             itemInfo.itemPureName = itemInfo.itemName.toLowerCase().replaceAll("[\\p{Punct}\\p{Blank}]+", " ").trim();
             if (rawBalanceSheetInfo.reportInfo.get(ind).stream().allMatch(p -> p == 0)) {
@@ -192,6 +221,18 @@ public class FileInfo {
             }
             richBalanceSheetInfo.itemInfoList.add(itemInfo);
 
+        }
+
+        richBalanceSheetInfo.reportInfoList = new ArrayList<>();
+
+//        System.out.println(richBalanceSheetInfo.itemInfoList.size());
+        for (int ind=0; ind < richBalanceSheetInfo.itemInfoList.size(); ++ind) {
+            for (int jnd=0; jnd < richBalanceSheetInfo.reportDateList.size(); ++jnd) {
+//                rawBalanceSheetInfo.reportInfo.get(ind).get(jnd);
+//                System.out.println("ind = " + ind + ", jnd = " + jnd + " ii = " + richBalanceSheetInfo.itemInfoList.get(ind).itemName + " " + rawBalanceSheetInfo.reportInfo.get(ind).get(jnd));
+//                System.out.println(richBalanceSheetInfo.reportDateList.get(jnd));
+                richBalanceSheetInfo.reportInfoList.add(new ReportInfo(ind, richBalanceSheetInfo.reportDateList.get(jnd), rawBalanceSheetInfo.reportInfo.get(ind).get(jnd)));
+            }
         }
 
         for (ItemInfo itemInfo : richBalanceSheetInfo.itemInfoList) {
@@ -210,7 +251,7 @@ public class FileInfo {
 
             // Отбираем, те у которых Subtotal flag = 1
             if (itemInfo.parentItemIndex == -2) {
-                System.out.println(itemInfo.itemPureName);
+//                System.out.println(itemInfo.itemPureName);
                 itemInfo.parentItemIndex =
                     richBalanceSheetInfo.itemInfoList.stream()
                         // Шагаем по элементам, которые являются заголовками
@@ -261,7 +302,18 @@ public class FileInfo {
                 richBalanceSheetInfo.itemInfoList.get(ii).parentItemIndex = richBalanceSheetInfo.itemInfoList.get(headerIndex).itemIndex;
             }
         }
+
         richFileInfo.balanceSheetInfoList.add(richBalanceSheetInfo);
+
+        int ind = -1;
+        int lag_ind = 0;
+        for (ItemInfo itemInfo : richBalanceSheetInfo.itemInfoList) {
+
+            itemInfo.itemLevel = lag_ind + (itemInfo.itemSubtotalFlag ? -1 : 0);
+            lag_ind += (itemInfo.itemSubtotalFlag ? -1 : 0) + (itemInfo.itemHeaderFlag ? 1 : 0);
+
+        }
+//        System.out.println("richFileInfo = " + ((RichBalanceSheetInfo) richFileInfo.balanceSheetInfoList.get(0)).itemInfoList.size());
         return richFileInfo;
     }
 }

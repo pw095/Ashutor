@@ -1,15 +1,19 @@
 INSERT
   INTO tmp_report_info
   (
+    emitter_name,
     file_name,
-    code_index,
-    report_year,
+    file_date,
+    item_index,
+    report_date,
     report_value
   )
 VALUES
   (
+    :emitter_name,
     :file_name,
-    :code_index,
-    :report_year,
+    :file_date,
+    :item_index,
+    :report_date,
     :report_value
   )

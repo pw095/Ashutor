@@ -50,27 +50,31 @@ public class Main {
 
         Files.walk(Paths.get(new String(rb.getString("source_directory").getBytes("ISO-8859-1"), Charset.forName("UTF-8"))))
             .filter(p -> p.toString().endsWith(".xlsx"))
+            .filter(p -> !p.toString().contains("cmn"))
             .filter(p -> !p.toString().contains("~$"))
             .map(FileInfo::new)
             .forEach(rawFileInfoList::add);
 
 //        System.out.println("size = " + ((RawBalanceSheetInfo) rawFileInfoList.get(0).balanceSheetInfoList.get(0)).itemList.size());
-        /*for (FileInfo rawFileInfo : rawFileInfoList) {
-            System.out.println(rawFileInfo.fileName);
+/*        for (FileInfo rawFileInfo : rawFileInfoList) {
+            System.out.println(rawFileInfo.emitterName + " " + rawFileInfo.fileName);
             FileInfo.getRich(rawFileInfo);
         }*/
 //        rawFileInfoList.stream().map(FileInfo::getRich).forEach(p -> System.out.println(p.fileName));
+/*        if (1 < 2) {
+            return;
+        }*/
         rawFileInfoList.stream()
             .map(FileInfo::getRich)
             .forEach(richFileInfoList::add);
 
-
+/*
         for (ItemInfo itemInfo : ((RichBalanceSheetInfo) richFileInfoList.get(0).balanceSheetInfoList.get(0)).itemInfoList) {
 //            if (itemInfo.itemHeaderFlag || itemInfo.itemSubtotalFlag) {
             System.out.println("itemIndex = " + itemInfo.itemIndex + ", itemParentIndex = " + itemInfo.parentItemIndex + " " + itemInfo.itemHeaderFlag + " " + itemInfo.itemSubtotalFlag + " " + itemInfo.itemName + " |||| " + itemInfo.itemPureName);
 //            }
-    }
-
+        }
+*/
 
 
 //        for (int ii = 0; ii < richBalanceSheetInfo.itemInfoList.size(); ++ii) {
@@ -103,102 +107,92 @@ public class Main {
 
 
 
-        /*
+        String sqlInsertPath = Paths.get(rb.getString("tmp_directory"), rb.getString("insert_directory")).toString();
+        String sqlDeletePath = Paths.get(rb.getString("tmp_directory"), rb.getString("delete_directory")).toString();
+/*        System.out.println(";");
+        System.out.println(Paths.get(sqlDeletePath, rb.getString("item_info")));
+        System.out.println(getQuery(Paths.get(sqlDeletePath, rb.getString("item_info"))));
+        System.out.println(";");*/
         try (Connection conn = DriverManager.getConnection(rb.getString("url"))) {
 
             conn.setAutoCommit(false);
 
-            String sqlInsertPath = Paths.get(rb.getString("tmp_directory"), rb.getString("insert_directory")).toString();
-            String sqlDeletePath = Paths.get(rb.getString("tmp_directory"), rb.getString("delete_directory")).toString();
 
-            String[] tableList = {"file_info", "report_info", "code_info", "word_info"};
 
-            for (String tab : tableList) {
-                try (PreparedStatement pstmtDelete = conn.prepareStatement(getQuery(Paths.get(sqlDeletePath, rb.getString(tab)).toString()))) {
-                    pstmtDelete.execute();
+            try (PreparedStatement pstmtFileDelete = conn.prepareStatement(getQuery(Paths.get(sqlDeletePath, rb.getString("file_info"))));
+                 PreparedStatement pstmtItemDelete = conn.prepareStatement(getQuery(Paths.get(sqlDeletePath, rb.getString("item_info"))));
+                 PreparedStatement pstmtReportDelete = conn.prepareStatement(getQuery(Paths.get(sqlDeletePath, rb.getString("report_info"))))) {
+
+                pstmtFileDelete.execute();
+                pstmtItemDelete.execute();
+                pstmtReportDelete.execute();
+
+            }
+
+            conn.commit();
+
+            for (FileInfo richFileInfo : richFileInfoList) {
+
+                try (PreparedStatement pstmtInsert = conn.prepareStatement(getQuery(Paths.get(sqlInsertPath, rb.getString("file_info"))))) {
+                    pstmtInsert.setString(1, richFileInfo.emitterName);
+                    pstmtInsert.setString(2, richFileInfo.fileName);
+                    pstmtInsert.setString(3, richFileInfo.fileDate.format(dateFormat));
+                    pstmtInsert.setString(4, richFileInfo.fileCurrency);
+                    pstmtInsert.setInt(5, richFileInfo.fileFactor);
+                    pstmtInsert.execute();
+                }
+
+                for (SheetInfo sheetInfo : richFileInfo.balanceSheetInfoList) {
+
+                    RichBalanceSheetInfo richBalanceSheetInfo = (RichBalanceSheetInfo) sheetInfo;
+
+                    try (PreparedStatement pstmtInsert = conn.prepareStatement(getQuery(Paths.get(sqlInsertPath, rb.getString("item_info"))))) {
+                        for (ItemInfo itemInfo : richBalanceSheetInfo.itemInfoList) {
+                            pstmtInsert.setString(1, richFileInfo.emitterName);
+                            pstmtInsert.setString(2, richFileInfo.fileName);
+                            pstmtInsert.setString(3, richFileInfo.fileDate.format(dateFormat));
+                            pstmtInsert.setInt(4, itemInfo.itemIndex);
+                            pstmtInsert.setInt(5, itemInfo.parentItemIndex);
+                            pstmtInsert.setString(6, itemInfo.itemSubtotalFlag ? "subtotal" : "not_subtotal");
+                            pstmtInsert.setString(7, itemInfo.itemHeaderFlag ? "header" : "not_header");
+                            pstmtInsert.setInt(8, itemInfo.itemLevel);
+                            pstmtInsert.setString(9, itemInfo.itemName);
+                            pstmtInsert.setString(10, itemInfo.itemPureName);
+                            pstmtInsert.addBatch();
+                        }
+                        pstmtInsert.executeBatch();
+                    }
+
+                    try (PreparedStatement pstmtInsert = conn.prepareStatement(getQuery(Paths.get(sqlInsertPath, rb.getString("report_info"))))) {
+                        System.out.println("emitterName = " + richFileInfo.emitterName + " fileName = " + richFileInfo.fileName + " fileDate = " + richFileInfo.fileDate);
+                        for (ReportInfo reportInfo : richBalanceSheetInfo.reportInfoList) {
+                            pstmtInsert.setString(1, richFileInfo.emitterName);
+                            pstmtInsert.setString(2, richFileInfo.fileName);
+                            pstmtInsert.setString(3, richFileInfo.fileDate.format(dateFormat));
+                            pstmtInsert.setInt(4, reportInfo.reportItemIndex);
+                            pstmtInsert.setString(5, reportInfo.reportDate.format(dateFormat));
+                            pstmtInsert.setInt(6, reportInfo.reportValue);
+                            pstmtInsert.addBatch();
+                        }
+                        pstmtInsert.executeBatch();
+                    }
                 }
             }
 
             conn.commit();
 
-            for (ExcelInfo excelInfo : excelInfoList) {
-                for (String tab : tableList) {
-                    try (PreparedStatement pstmtInsert = conn.prepareStatement(getQuery(Paths.get(sqlInsertPath, rb.getString(tab)).toString()))) {
-                        switch (tab) {
-                            case "file_info":
-                                pstmtInsert.setString(1, excelInfo.fileInfo.fileName);
-                                pstmtInsert.setString(2, excelInfo.fileInfo.fileDate.format(dateFormat));
-                                pstmtInsert.setString(3, excelInfo.fileInfo.fileCurrency);
-                                pstmtInsert.setInt(4, excelInfo.fileInfo.fileFactor);
-                                pstmtInsert.addBatch();
-                                break;
-                            case "report_info":
-                                for (ReportInfo reportInfo : excelInfo.reportInfoList) {
-                                    pstmtInsert.setString(1, reportInfo.fileName);
-                                    pstmtInsert.setInt(2, reportInfo.codeIndex);
-                                    pstmtInsert.setString(3, reportInfo.reportDate.format(dateFormat));
-                                    pstmtInsert.setInt(4, reportInfo.reportValue);
-                                    pstmtInsert.addBatch();
-                                }
-                                break;
-                            case "code_info":
-                                for (CodeInfo codeInfo : excelInfo.codeInfoList) {
-                                    pstmtInsert.setString(1, codeInfo.fileName);
-                                    pstmtInsert.setInt(2, codeInfo.codeIndex);
-                                    pstmtInsert.setString(3, codeInfo.codeName);
-                                    pstmtInsert.setString(4, String.join(" ", codeInfo.codeWordList));
-                                    pstmtInsert.addBatch();
-                                }
-                                break;
-                            case "word_info":
-                                for (CodeInfo codeInfo : excelInfo.codeInfoList) {
-                                    for (int ind = 0; ind < codeInfo.codeWordList.size(); ++ind) {
-                                        pstmtInsert.setString(1, codeInfo.fileName);
-                                        pstmtInsert.setInt(2, codeInfo.codeIndex);
-                                        pstmtInsert.setInt(3, ind + 1);
-                                        pstmtInsert.setString(4, codeInfo.codeWordList.get(ind));
-                                        pstmtInsert.addBatch();
-                                    }
-                                }
-                                break;
-                            default:
-                                throw new RuntimeException();
-                        }
-                        pstmtInsert.executeBatch();
-                        conn.commit();
-                    }
-                }
-            }
-
-            try (PreparedStatement pstmtFile = conn.prepareStatement(getQuery(rb.getString("file")));
-                 PreparedStatement pstmtFineCode = conn.prepareStatement(getQuery(rb.getString("fine_code")));
-                 PreparedStatement pstmtWord = conn.prepareStatement(getQuery(rb.getString("word")));
-                 PreparedStatement pstmtWordInCode = conn.prepareStatement(getQuery(rb.getString("word_in_code")));
-                 PreparedStatement pstmtCode = conn.prepareStatement(getQuery(rb.getString("code")));
-                 PreparedStatement pstmtCodeInFile = conn.prepareStatement(getQuery(rb.getString("code_in_file")));
-                 PreparedStatement pstmtStat = conn.prepareStatement(getQuery(rb.getString("stat")))) {
-                pstmtFile.execute();
-                pstmtFineCode.execute();
-                pstmtWord.execute();
-                pstmtWordInCode.execute();
-                pstmtCode.execute();
-                pstmtCodeInFile.execute();
-                pstmtStat.execute();
-            }
-
-            --conn.commit();
-
         } catch (SQLException e) {
             e.printStackTrace();
         }
-*/
+
     }
 
-    public static String getQuery(String filePath) {
+    public static String getQuery(Path filePath) {
         String queryString = null;
 
         try {
-            queryString = Files.lines(Paths.get(rb.getString("sql_directory"), filePath)).collect(Collectors.joining(System.getProperty("line.separator")));
+            queryString = Files.lines(Paths.get(rb.getString("sql_directory"), filePath.toString()))
+                            .collect(Collectors.joining(System.getProperty("line.separator")));
         } catch (IOException e) {
             System.out.println(e.getMessage());
         }

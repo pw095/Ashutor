@@ -1,0 +1,27 @@
+INSERT
+  INTO tmp_item_info
+  (
+    emitter_name,
+    file_name,
+    file_date,
+    item_index,
+    item_parent_index,
+    item_subtotal_flag,
+    item_header_flag,
+    item_level,
+    item_name,
+    item_pure_name
+  )
+VALUES
+  (
+    :emitter_name,
+    :file_name,
+    :file_date,
+    :item_index,
+    :item_parent_index,
+    :item_subtotal_flag,
+    :item_header_flag,
+    :item_level,
+    :item_name,
+    :item_pure_name
+  )
