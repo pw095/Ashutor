@@ -1,0 +1,1 @@
+DELETE FROM tmp_fine_item_match

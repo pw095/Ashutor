@@ -5,5 +5,5 @@ CREATE TABLE tbl_item_file_balance_statistic
     report_date     TEXT                              NOT NULL,
     item_stat_value INTEGER,
     UNIQUE(ifb_id, report_date),
-    FOREIGN KEY(ifb_id) REFERENCES tbl_item_file_balance(ifb_id)
+    FOREIGN KEY(ifb_id) REFERENCES tbl_item_file_balance(ifb_id) ON DELETE CASCADE
   );

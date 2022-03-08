@@ -5,5 +5,5 @@ INSERT OR IGNORE
   )
 SELECT
        DISTINCT
-       emitent
-  FROM src.stg_statement
+       emitter_name
+  FROM tmp_file_info

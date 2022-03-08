@@ -5,11 +5,11 @@ UPDATE tbl_item_file_balance AS dest
                                JOIN
                                tbl_item_file_balance ifb_parent
                                    ON ifb_parent.ifb_file_id = src.ifb_file_id
-                                  AND ifb_parent.ifb_number = src.ifb_parent_number
+                                  AND ifb_parent.ifb_index = src.ifb_parent_index
                          WHERE src.ifb_file_id = dest.ifb_file_id
-                           AND src.ifb_number = dest.ifb_number)
+                           AND src.ifb_index = dest.ifb_index)
  WHERE EXISTS(SELECT
                      NULL
                 FROM tmp_item_file_balance src
                WHERE src.ifb_file_id = dest.ifb_file_id
-                 AND src.ifb_number = dest.ifb_number)
+                 AND src.ifb_index = dest.ifb_index)

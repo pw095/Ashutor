@@ -6,7 +6,8 @@ INSERT OR IGNORE
     ifb_item_id,
     ifb_fine_item_id,
     ifb_level,
-    ifb_number,
+    ifb_index,
+    ifb_header_flag,
     ifb_subtotal_flag
   )
 SELECT
@@ -15,6 +16,7 @@ SELECT
        ifb_item_id,
        ifb_fine_item_id,
        ifb_level,
-       ifb_number,
+       ifb_index,
+       ifb_header_flag,
        ifb_subtotal_flag
   FROM tmp_item_file_balance

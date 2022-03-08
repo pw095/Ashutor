@@ -43,7 +43,8 @@ public class FileInfo {
         fileInfo.fileName = path.getFileName().toString();
         fileInfo.emitterName = path.getParent().getFileName().toString();
 
-//        System.out.println(fileInfo.fileName);
+        System.out.println(fileInfo.emitterName);
+        System.out.println(fileInfo.fileName);
 
         fileInfo.fileDate = LocalDate.of(Integer.parseInt(fileInfo.fileName.replaceAll("\\.xlsx", "")), Month.DECEMBER, 31);
 
@@ -71,8 +72,10 @@ public class FileInfo {
                     rawBalanceSheetInfo.itemList = new ArrayList<>();
                     rawBalanceSheetInfo.reportDateList = new ArrayList<>();
                     rawBalanceSheetInfo.reportInfo = new ArrayList<>();
-//                    fileInfo.reportDateList = new ArrayList<>();
+
                     int maxColumnIndex = 0;
+
+                    labelRow:
                     for (Row row : workSheet) { //  Первая строка содержит информацию о множителе (млн, тыс), валюте и отчётных годах
 
                         for (Cell cell : row) {
@@ -112,12 +115,37 @@ public class FileInfo {
 //                            for (Cell cell : row) {
                             for (int columnIndex = 0; columnIndex <= maxColumnIndex; ++columnIndex) {
 //                                int columnIndex = cell.getColumnIndex();
+
                                 Cell cell = row.getCell(columnIndex);
+/*
+                                if (cell == null) {
+                                    System.out.println("columnIndex = " + columnIndex + ", rowNum = " + row.getRowNum());
+                                }
+*/
                                 if (columnIndex == 0) { // В первом столбце всегда статьи
-                                    rawBalanceSheetInfo.itemList.add(cell.getStringCellValue());
-//                                    System.out.print(cell.getStringCellValue() + " ");
+//                                    String cellValue = cell.getStringCellValue();
+//                                    Отбрасываем всю строку, если первый столбец не заполнен. Он может быть не заполнен, если
+//                                    1. Вся строка не заполнена
+//                                    2. Данные в строке выполняю роль промежуточного подытога. Такие подытоги не обрабатываются и в БД не загружаются.
+                                    if (cell != null) {
+                                        if (cell.getCellType() == CellType.STRING) {
+
+                                            String cellValue = cell.getStringCellValue();
+
+                                            if ( !(cellValue == null || cell.getStringCellValue().isEmpty()) ) {
+                                                rawBalanceSheetInfo.itemList.add(cellValue);
+                                            } else {
+                                                continue labelRow;
+                                            }
+
+                                        } else {
+                                            continue labelRow;
+                                        }
+                                    } else {
+                                        continue labelRow;
+                                    }
                                 } else { // Во всех прочих показатели отчётности
-                                    try {
+                                    if (cell != null ) {
                                         if (cell.getCellType() == CellType.NUMERIC) {
 //                                            System.out.print("max_column_index = " + maxColumnIndex + " column_index = " + (columnIndex-1) + " " + (int) cell.getNumericCellValue());
                                             reportLine.add(columnIndex-1, (int) cell.getNumericCellValue());
@@ -125,14 +153,15 @@ public class FileInfo {
 //                                            System.out.print("max_column_index = " + maxColumnIndex + " column_index = " + (columnIndex-1) + " 0000000");
                                             reportLine.add(columnIndex-1, 0);
                                         }
-                                    } catch (NullPointerException e) {
-//                                        System.out.print("max_column_index = " + maxColumnIndex + " column_index = " + (columnIndex-1) + " 0000000");
+                                    } else {
                                         reportLine.add(columnIndex-1, 0);
                                     }
                                 }
 //                                System.out.println();
                             }
-                            rawBalanceSheetInfo.reportInfo.add(reportLine);
+                            if (!reportLine.isEmpty()) {
+                                rawBalanceSheetInfo.reportInfo.add(reportLine);
+                            }
                         }
                     }
 //                    System.out.println("## " + fileInfo.balanceSheetInfoList.size());
@@ -211,7 +240,12 @@ public class FileInfo {
             ItemInfo itemInfo = new ItemInfo();
             itemInfo.itemIndex = ind;
 //            System.out.println("ind = " + ind + " " + rawBalanceSheetInfo.itemList.get(ind));
-            itemInfo.itemName = rawBalanceSheetInfo.itemList.get(ind);
+            try {
+                itemInfo.itemName = rawBalanceSheetInfo.itemList.get(ind);
+            } catch (RuntimeException e) {
+                e.printStackTrace();
+                System.out.println("ind = " + ind + ", rawBalanceSheetInfo = " + rawBalanceSheetInfo.itemList.get(1));
+            }
             itemInfo.itemPureName = itemInfo.itemName.toLowerCase().replaceAll("[\\p{Punct}\\p{Blank}]+", " ").trim();
             if (rawBalanceSheetInfo.reportInfo.get(ind).stream().allMatch(p -> p == 0)) {
                 itemInfo.itemHeaderFlag = true;
