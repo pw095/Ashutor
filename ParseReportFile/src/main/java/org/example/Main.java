@@ -142,10 +142,9 @@ public class Main {
             int rowNum = 0;
             Row headerRow = emitterListSheet.createRow(rowNum);
             headerRow.createCell(0).setCellValue("EmitterList");
-            ++rowNum;
 
             for (String emitterName : emitterBalanceInfo.keySet()) {
-                Row row = emitterListSheet.createRow(rowNum);
+                Row row = emitterListSheet.createRow(++rowNum);
                 row.createCell(0).setCellValue(emitterName);
             }
 
@@ -305,18 +304,18 @@ public class Main {
 
         List<FileInfo> rawFileInfoList = new ArrayList<>();
         List<FileInfo> richFileInfoList = new ArrayList<>();
-
-/*        get();
+        get();
 
         if (2>1) {
             return;
-        }*/
+        }
 
         Files.walk(Paths.get(new String(rb.getString("source_directory").getBytes("ISO-8859-1"), Charset.forName("UTF-8"))))
             .filter(p -> p.toString().endsWith(".xlsx"))
             .filter(p -> !p.toString().contains("cmn"))
             .filter(p -> !p.toString().contains("~$"))
-            .filter(p -> p.toString().contains("36,6") || p.toString().contains("Детский мир"))
+            .filter(p -> !p.toString().contains("temp_merge_file.xlsx"))
+//            .filter(p -> p.toString().contains("М.Видео") || p.toString().contains("36,6") || p.toString().contains("Детский мир"))
 //            .filter(p -> p.toString().contains("2020"))
             .map(FileInfo::new)
             .forEach(rawFileInfoList::add);
@@ -434,7 +433,7 @@ public class Main {
                         for (ReportInfo reportInfo : richBalanceSheetInfo.reportInfoList) {
                             pstmtInsert.setString(1, richFileInfo.emitterName);
                             pstmtInsert.setString(2, richFileInfo.fileName);
-                            pstmtInsert.setString(3, richFileInfo.fileDate.format(dateFormat));
+                            pstmtInsert.setString(3, richFileInfo.fileDate.format(dateFormat)); // Как будто бы не нужно, одного имени файла достаточно
                             pstmtInsert.setInt(4, reportInfo.reportItemIndex);
                             pstmtInsert.setString(5, reportInfo.reportDate.format(dateFormat));
                             pstmtInsert.setInt(6, reportInfo.reportValue);
@@ -452,7 +451,8 @@ public class Main {
                  PreparedStatement pstmtTmpItemFileBalance = conn.prepareStatement(getQuery(Paths.get(sqlInsertPath, "tmp_item_file_balance.sql")));
 //                 PreparedStatement pstmtInsert = conn.prepareStatement(getQuery(Paths.get(sqlInsertPath, rb.getString("item_file_balance_2"))));
                  PreparedStatement pstmtItemFileBalance1 = conn.prepareStatement(getQuery(Paths.get(sqlTransformLoadPath, rb.getString("item_file_balance_1"))));
-                 PreparedStatement pstmtItemFileBalance2 = conn.prepareStatement(getQuery(Paths.get(sqlTransformLoadPath, rb.getString("item_file_balance_2"))))) {
+                 PreparedStatement pstmtItemFileBalance2 = conn.prepareStatement(getQuery(Paths.get(sqlTransformLoadPath, rb.getString("item_file_balance_2"))));
+                 PreparedStatement pstmtItemFileBalanceStat = conn.prepareStatement(getQuery(Paths.get(sqlTransformLoadPath, rb.getString("item_file_balance_statistic"))))) {
 
                 pstmtEmitter.execute();
                 pstmtFile.execute();
@@ -462,6 +462,7 @@ public class Main {
                 pstmtTmpItemFileBalance.execute();
                 pstmtItemFileBalance1.execute();
                 pstmtItemFileBalance2.execute();
+                pstmtItemFileBalanceStat.execute();
 
             }
             conn.commit();

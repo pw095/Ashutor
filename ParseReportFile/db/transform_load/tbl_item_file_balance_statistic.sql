@@ -7,21 +7,22 @@ INSERT
   )
 SELECT
        ifb.ifb_id,
-       stmt.report_date,
-       ROUND(stmt.item_stat_value) AS item_stat_value
-  FROM tmp_report_info stmt
+       tmp.report_date,
+       ROUND(tmp.report_value) AS item_stat_value
+  FROM tmp_report_info tmp
        JOIN
        tbl_item_file_balance ifb
-           ON ifb.ifb_number = stmt.statement_number
+           ON ifb.ifb_index = tmp.item_index
        JOIN
        tbl_file file
            ON file.file_id = ifb.ifb_file_id
-          AND file.file_name = stmt.file_name
+          AND file.file_name = tmp.file_name
        JOIN
        tbl_emitter emit
            ON emit.emitter_id = file.file_emitter_id
-          AND emit.emitter_name = stmt.emitent
- WHERE stmt.sheet = 'BALANCE'
+          AND emit.emitter_name = tmp.emitter_name
+ WHERE TRUE
  ON CONFLICT(ifb_id, report_date)
  DO UPDATE
        SET item_stat_value = excluded.item_stat_value
+     WHERE item_stat_value != excluded.item_stat_value

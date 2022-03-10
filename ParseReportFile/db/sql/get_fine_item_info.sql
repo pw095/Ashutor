@@ -73,7 +73,7 @@ SELECT
        fine_item.fine_item_name,
        hier.hier_pure_item_path
   FROM w_ord ord
-       LEFT JOIN
+       JOIN
        tbl_fine_item fine_item
            ON fine_item.fine_item_id = ord.fine_item_id
           AND fine_item.fine_item_code != 'TECH$BLANC'

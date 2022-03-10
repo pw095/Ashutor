@@ -26,4 +26,5 @@ UPDATE tbl_item_file_balance AS dest
                      JOIN
                      tbl_fine_item fine_item
                          ON fine_item.fine_item_code = tmp.fine_item_code
-               WHERE tmp.ifb_id = dest.ifb_id)
+               WHERE tmp.ifb_id = dest.ifb_id
+                 AND fine_item.fine_item_id != dest.ifb_fine_item_id)

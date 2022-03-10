@@ -99,6 +99,8 @@ public class FileInfo {
 
                                     if (stringValue.contains("руб")) {
                                         fileInfo.fileCurrency = "RUB";
+                                    } else if (stringValue.contains("долл")) {
+                                        fileInfo.fileCurrency = "USD";
                                     }
                                 } else { // Во всех прочих информация об отчётных годах
                                     if (cell.getCellType() == CellType.NUMERIC) {
