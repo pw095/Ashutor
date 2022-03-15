@@ -1,23 +1,26 @@
 package org.example;
 
-import org.apache.commons.text.similarity.CosineDistance;
-import org.apache.commons.text.similarity.LevenshteinDistance;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.example.item.BalanceItemInfo;
+import org.example.item.CFItemInfo;
+import org.example.item.PLItemInfo;
+import org.example.report.ReportInfo;
+import org.example.report.SingleDimensionReportInfo;
+import org.example.sheet.BalanceSheetInfo;
+import org.example.sheet.CFSheetInfo;
+import org.example.sheet.PLSheetInfo;
+import org.example.sheet.SheetInfo;
 
 import java.io.*;
 import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.*;
-import java.time.LocalDate;
-import java.time.Month;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 public class Main {
@@ -30,16 +33,17 @@ public class Main {
 
     public static class GroupItem {
         String reportDate;
-        int ifbId;
+        int id;
 
         GroupItem(String str) {
             String[] arr = str.split(": ");
+//            new GroupItem(arr[0], Integer.valueOf(arr[1]));
             reportDate = arr[0];
-            ifbId = Integer.parseInt(arr[1]);
+            id = Integer.parseInt(arr[1]);
         }
-        GroupItem(String reportDate, int ifbId) {
+        GroupItem(String reportDate, int id) {
             this.reportDate = reportDate;
-            this.ifbId = ifbId;
+            this.id = id;
         }
 
     }
@@ -48,7 +52,7 @@ public class Main {
         String fineItemCode;
         String hierPureItemPath;
         int level;
-        int ifbIndex;
+        int index;
         int cnt;
         String groupCnct;
         List<GroupItem> groupItemList;
@@ -57,12 +61,28 @@ public class Main {
 
         }
 
-        QueryResult(String fineItemCode, String hierPureItemPath, int level, int ifbIndex, int cnt, String groupCnct) {
+        QueryResult(String fineItemCode, String hierPureItemPath, int index, int cnt, String groupCnct) {
+
+            this.fineItemCode = fineItemCode;
+            this.hierPureItemPath = hierPureItemPath;
+            this.index = index;
+            this.cnt = cnt;
+            this.groupCnct = groupCnct;
+
+            List<String> list = Arrays.asList(groupCnct.split(", "));
+            groupItemList = new ArrayList<>();
+
+            for (String elt : list) {
+                groupItemList.add(new GroupItem(elt));
+            }
+        }
+
+        QueryResult(String fineItemCode, String hierPureItemPath, int level, int index, int cnt, String groupCnct) {
 
             this.fineItemCode = fineItemCode;
             this.hierPureItemPath = hierPureItemPath;
             this.level = level;
-            this.ifbIndex = ifbIndex;
+            this.index = index;
             this.cnt = cnt;
             this.groupCnct = groupCnct;
 
@@ -91,50 +111,78 @@ public class Main {
 
     public static void get() {
 
-        String sqlGetPath = Paths.get(rb.getString("get_directory")).toString();
+        String sqlGetPath = Paths.get(rb.getString("get_directory"), "export").toString();
 
         Map<String, List<QueryResult>> emitterBalanceInfo = new HashMap<>();
-        List<FineItemInfo> fineItemInfoList = new ArrayList<>();
+        Map<String, List<QueryResult>> emitterPLInfo = new HashMap<>();
+        List<FineItemInfo> fineItemBalanceInfoList = new ArrayList<>();
+        List<FineItemInfo> fineItemPLInfoList = new ArrayList<>();
 
         try (Connection conn = DriverManager.getConnection(rb.getString("url"))) {
-            try (PreparedStatement pstmtFineItemInfo = conn.prepareStatement(getQuery(Paths.get(sqlGetPath, rb.getString("get_fine_item_info"))));
-                 ResultSet rs = pstmtFineItemInfo.executeQuery()) {
+            try (PreparedStatement pstmtFineItemBalance = conn.prepareStatement(getQuery(Paths.get(sqlGetPath, "export_fine_item_balance.sql")));
+                 ResultSet rs = pstmtFineItemBalance.executeQuery()) {
                 while (rs.next()) {
                     String fineItemCode = rs.getString("fine_item_code");
                     String fineItemName = rs.getString("fine_item_name");
                     String hierPureItemPath = rs.getString("hier_pure_item_path");
-                    fineItemInfoList.add(new FineItemInfo(fineItemCode, fineItemName, hierPureItemPath));
+                    fineItemBalanceInfoList.add(new FineItemInfo(fineItemCode, fineItemName, hierPureItemPath));
                 }
             }
 
-            try (PreparedStatement pstmtEmitter = conn.prepareStatement(getQuery(Paths.get(sqlGetPath, "get_emitters.sql")));
-                 PreparedStatement pstmtGet = conn.prepareStatement(getQuery(Paths.get(sqlGetPath, rb.getString("get_agg_item"))));
+            try (PreparedStatement pstmtFineItemPL = conn.prepareStatement(getQuery(Paths.get(sqlGetPath, "export_fine_item_pl.sql")));
+                 ResultSet rs = pstmtFineItemPL.executeQuery()) {
+                while (rs.next()) {
+                    String fineItemCode = rs.getString("fine_item_code");
+                    String fineItemName = rs.getString("fine_item_name");
+                    String hierPureItemPath = rs.getString("hier_pure_item_path");
+                    fineItemPLInfoList.add(new FineItemInfo(fineItemCode, fineItemName, hierPureItemPath));
+                }
+            }
+
+            try (PreparedStatement pstmtEmitter = conn.prepareStatement(getQuery(Paths.get(sqlGetPath, "export_emitters.sql")));
+                 PreparedStatement pstmtBalanceGet = conn.prepareStatement(getQuery(Paths.get(sqlGetPath, "export_pure_x_fine_item_match_balance.sql")));
+                 PreparedStatement pstmtPLGet = conn.prepareStatement(getQuery(Paths.get(sqlGetPath, "export_pure_x_fine_item_match_pl.sql")));
                  ResultSet rs = pstmtEmitter.executeQuery()) {
 
                 while (rs.next()) {
                     String emitterName = rs.getString("emitter_name");
 
-                    pstmtGet.setString(1, emitterName);
-                    List<QueryResult> queryResultList = new ArrayList<>();
-                    try (ResultSet rsGet = pstmtGet.executeQuery()) {
+                    pstmtBalanceGet.setString(1, emitterName);
+                    List<QueryResult> queryResultBalanceList = new ArrayList<>();
+                    try (ResultSet rsGet = pstmtBalanceGet.executeQuery()) {
                         while (rsGet.next()) {
                             String fineItemCode = rsGet.getString("fine_item_code");
                             String hierPureItemPath = rsGet.getString("hier_pure_item_path");
                             int level = rsGet.getInt("level");
-                            int ifbIndex = rsGet.getInt("ifb_index");
+                            int index = rsGet.getInt("ifb_index");
                             int cnt = rsGet.getInt("cnt");
                             String groupCnct = rsGet.getString("group_cnct");
-                            queryResultList.add(new QueryResult(fineItemCode, hierPureItemPath, level, ifbIndex, cnt, groupCnct));
+                            queryResultBalanceList.add(new QueryResult(fineItemCode, hierPureItemPath, level, index, cnt, groupCnct));
                         }
                     }
-                    emitterBalanceInfo.put(emitterName, queryResultList);
+                    emitterBalanceInfo.put(emitterName, queryResultBalanceList);
+
+                    pstmtPLGet.setString(1, emitterName);
+                    List<QueryResult> queryResultPLList = new ArrayList<>();
+                    try (ResultSet rsGet = pstmtPLGet.executeQuery()) {
+                        while (rsGet.next()) {
+                            String fineItemCode = rsGet.getString("fine_item_code");
+                            String hierPureItemPath = rsGet.getString("hier_pure_item_path");
+                            int index = rsGet.getInt("ifpl_index");
+                            int cnt = rsGet.getInt("cnt");
+                            String groupCnct = rsGet.getString("group_cnct");
+                            queryResultPLList.add(new QueryResult(fineItemCode, hierPureItemPath, index, cnt, groupCnct));
+                        }
+                    }
+                    emitterPLInfo.put(emitterName, queryResultPLList);
                 }
             }
+
         } catch (SQLException e) {
             e.printStackTrace();
         }
 
-        try (FileOutputStream file = new FileOutputStream(new File("C:\\Users\\pw095\\Documents\\Git\\Alamedin\\temp_merge_file.xlsx"))) {
+        try (FileOutputStream file = new FileOutputStream(new File("C:\\Users\\pw095\\Documents\\Git\\Alamedin\\balance.xlsx"))) {
 
             XSSFWorkbook workbook = new XSSFWorkbook();
             XSSFSheet emitterListSheet = workbook.createSheet("Emitter List");
@@ -157,7 +205,7 @@ public class Main {
             headerRow.createCell(1).setCellValue("fine_item_name");
             headerRow.createCell(2).setCellValue("hier_pure_item_path");
 
-            for (FineItemInfo fineItemInfo : fineItemInfoList) {
+            for (FineItemInfo fineItemInfo : fineItemBalanceInfoList) {
                 Row row = fineItemDictSheet.createRow(++rowNum);
                 row.createCell(0).setCellValue(fineItemInfo.fineItemCode);
                 row.createCell(1).setCellValue(fineItemInfo.fineItemName);
@@ -168,7 +216,7 @@ public class Main {
                 List<QueryResult> queryResultList = emitterBalanceInfo.get(emitterName);
                 List<String> arrayList = queryResultList.stream()
                     .map(p -> p.groupItemList)
-                    .flatMap(p -> p.stream())
+                    .flatMap(Collection::stream)
                     .map(p -> p.reportDate)
                     .distinct()
                     .sorted()
@@ -197,12 +245,91 @@ public class Main {
                     newRow.createCell(0).setCellValue(queryResultList.get(jnd).fineItemCode);
                     newRow.createCell(1).setCellValue(queryResultList.get(jnd).hierPureItemPath);
                     newRow.createCell(2).setCellValue(queryResultList.get(jnd).level);
-                    newRow.createCell(3).setCellValue(queryResultList.get(jnd).ifbIndex);
+                    newRow.createCell(3).setCellValue(queryResultList.get(jnd).index);
                     newRow.createCell(4).setCellValue(queryResultList.get(jnd).cnt);
 
                     for (int ind=0; ind < queryResultList.get(jnd).groupItemList.size(); ++ind) {
                         int knd = arrayList.indexOf(queryResultList.get(jnd).groupItemList.get(ind).reportDate);
-                        newRow.createCell(5+knd).setCellValue(queryResultList.get(jnd).groupItemList.get(ind).ifbId);
+                        newRow.createCell(5+knd).setCellValue(queryResultList.get(jnd).groupItemList.get(ind).id);
+                    }
+                }
+            }
+            workbook.write(file);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        try (FileOutputStream file = new FileOutputStream(new File("C:\\Users\\pw095\\Documents\\Git\\Alamedin\\pl.xlsx"))) {
+
+            XSSFWorkbook workbook = new XSSFWorkbook();
+            XSSFSheet emitterListSheet = workbook.createSheet("Emitter List");
+
+            int rowNum = 0;
+            Row headerRow = emitterListSheet.createRow(rowNum);
+            headerRow.createCell(0).setCellValue("EmitterList");
+
+            for (String emitterName : emitterPLInfo.keySet()) {
+                Row row = emitterListSheet.createRow(++rowNum);
+                row.createCell(0).setCellValue(emitterName);
+            }
+
+            XSSFSheet fineItemDictSheet = workbook.createSheet("Fine Item Dictionary");
+
+            rowNum = 0;
+            headerRow = fineItemDictSheet.createRow(rowNum);
+
+            headerRow.createCell(0).setCellValue("fine_item_code");
+            headerRow.createCell(1).setCellValue("fine_item_name");
+            headerRow.createCell(2).setCellValue("hier_pure_item_path");
+
+            for (FineItemInfo fineItemInfo : fineItemPLInfoList) {
+                Row row = fineItemDictSheet.createRow(++rowNum);
+                row.createCell(0).setCellValue(fineItemInfo.fineItemCode);
+                row.createCell(1).setCellValue(fineItemInfo.fineItemName);
+                row.createCell(2).setCellValue(fineItemInfo.hierPureItemPath);
+            }
+
+            for (String emitterName : emitterPLInfo.keySet()) {
+                List<QueryResult> queryResultList = emitterPLInfo.get(emitterName);
+                List<String> arrayList = queryResultList.stream()
+                    .map(p -> p.groupItemList)
+//                    .peek(p -> System.out.println(p.size()))
+                    .flatMap(Collection::stream)
+//                    .peek(p -> System.out.println(p.ifbId + " " + p.reportDate))
+                    .map(p -> p.reportDate)
+                    .distinct()
+                    .sorted()
+                    .collect(Collectors.toList());
+
+                arrayList.forEach(System.out::println);
+
+                XSSFSheet emitterPLInfoSheet = workbook.createSheet(emitterName);
+
+                rowNum = 0;
+
+                Row row = emitterPLInfoSheet.createRow(rowNum);
+
+                row.createCell(0).setCellValue("FineItemCode");
+                row.createCell(1).setCellValue("HierPureItemPath");
+//                row.createCell(2).setCellValue("Level");
+                row.createCell(2).setCellValue("IfplIndex");
+                row.createCell(3).setCellValue("Count");
+
+                for (int ind=0; ind < arrayList.size(); ++ind) {
+                    row.createCell(4+ind).setCellValue(arrayList.get(ind));
+                }
+
+                for (int jnd=0; jnd < queryResultList.size(); ++jnd) {
+                    Row newRow = emitterPLInfoSheet.createRow(jnd+1);
+                    newRow.createCell(0).setCellValue(queryResultList.get(jnd).fineItemCode);
+                    newRow.createCell(1).setCellValue(queryResultList.get(jnd).hierPureItemPath);
+//                    newRow.createCell(2).setCellValue(queryResultList.get(jnd).level);
+                    newRow.createCell(2).setCellValue(queryResultList.get(jnd).index);
+                    newRow.createCell(3).setCellValue(queryResultList.get(jnd).cnt);
+
+                    for (int ind=0; ind < queryResultList.get(jnd).groupItemList.size(); ++ind) {
+                        int knd = arrayList.indexOf(queryResultList.get(jnd).groupItemList.get(ind).reportDate);
+                        newRow.createCell(4+knd).setCellValue(queryResultList.get(jnd).groupItemList.get(ind).id);
                     }
                 }
             }
@@ -214,255 +341,221 @@ public class Main {
 
 
 
-
-
-//        XSSFWorkbook workbook = new XSSFWorkbook(inputStream);
-//        queryRusultList;
-
-/*
-        class PreMatchQueryResult
-        {
-
-            int ifbID;
-            int parentIfbID;
-            int parentReport;
-            int ifbIndex;
-            int level;
-            String hierFineItemPath;
-            String hierPureItemPath;
-
-            PreMatchQueryResult(int ifbID, int ifbIndex, int level, String hierFineItemPath, String hierPureItemPath) {
-                this.ifbID = ifbID;
-                this.ifbIndex = ifbIndex;
-                this.level = level;
-                this.hierFineItemPath = hierFineItemPath;
-                this.hierPureItemPath = hierPureItemPath;
-            }
-
-            PreMatchQueryResult(int parentIfbID, int parentReport, PreMatchQueryResult preMatchQueryResult) {
-                this.ifbID = preMatchQueryResult.ifbID;
-                this.parentIfbID = parentIfbID;
-                this.parentReport = parentReport;
-                this.ifbIndex = preMatchQueryResult.ifbIndex;
-                this.level = preMatchQueryResult.level;
-                this.hierFineItemPath = preMatchQueryResult.hierFineItemPath;
-                this.hierPureItemPath = preMatchQueryResult.hierPureItemPath;
-            }
-        }
-
-        List<List<PreMatchQueryResult>> aa = new ArrayList<>();
-
-        List<PreMatchQueryResult> bb = new ArrayList<>();
-        bb.add(new PreMatchQueryResult(42, 0, 0, "", "активы"));
-        bb.add(new PreMatchQueryResult(43, 1, 1, "", "активы > внеоборотные активы"));
-        bb.add(new PreMatchQueryResult(44, 2, 2, "", "активы > внеоборотные активы > основные средства"));
-        bb.add(new PreMatchQueryResult(45, 3, 2, "", "активы > внеоборотные активы > нематериальные активы"));
-        bb.add(new PreMatchQueryResult(46, 3, 2, "", "активы > внеоборотные активы > инвестиция в зависимую компанию"));
-        bb.add(new PreMatchQueryResult(47, 3, 2, "", "активы > внеоборотные активы > долгосрочный заем выданный"));
-        bb.add(new PreMatchQueryResult(48, 3, 2, "", "активы > внеоборотные активы > отложенные налоговые активы"));
-        bb.add(new PreMatchQueryResult(49, 3, 2, "", "активы > внеоборотные активы > прочие внеоборотные активы"));
-        bb.add(new PreMatchQueryResult(50, 3, 2, "", "активы > внеоборотные активы > итого внеоборотные активы"));
-
-        aa.add(bb);
-
-        List<PreMatchQueryResult> cc = new ArrayList<>();
-        cc.add(new PreMatchQueryResult(198, 0, 0, "", "активы"));
-        cc.add(new PreMatchQueryResult(199, 1, 1, "", "активы > внеоборотные активы"));
-        cc.add(new PreMatchQueryResult(200, 2, 2, "", "активы > внеоборотные активы > основные средства"));
-        cc.add(new PreMatchQueryResult(201, 3, 2, "", "активы > внеоборотные активы > нематериальные активы"));
-        cc.add(new PreMatchQueryResult(202, 3, 2, "", "активы > внеоборотные активы > активы в форме права пользования"));
-        cc.add(new PreMatchQueryResult(203, 3, 2, "", "активы > внеоборотные активы > отложенные налоговые активы"));
-        cc.add(new PreMatchQueryResult(204, 3, 2, "", "активы > внеоборотные активы > прочие внеоборотные активы"));
-        cc.add(new PreMatchQueryResult(205, 3, 2, "", "активы > внеоборотные активы > итого внеоборотные активы"));
-
-        aa.add(cc);
-
-        for (int ind=0; ind < aa.size(); ++ind) {
-            if (ind == 0) {
-                continue;
-            } else {
-                List<PreMatchQueryResult> result1 = aa.get(ind); // 1 -- наш очередной отчёт, перебираем все отчёты, начиная со второго
-                // в него надо записать ссылку, на родительский отчёт
-                outerloop:
-                for (int jnd=0; jnd < ind; ++jnd) {
-                    List<PreMatchQueryResult> result2 = aa.get(jnd); // 0 -- все предшествующие отчёты по очереди
-                    for (int xnd = 0; xnd < result1.size(); ++xnd) {
-                        for (int ynd = 0; ynd < result2.size(); ++ynd) {
-                            if (result1.get(xnd).hierPureItemPath.equals(result2.get(ynd).hierPureItemPath)) {
-                                result1.get(xnd).parentIfbID = result2.get(ynd).ifbID;
-                                result1.get(xnd).parentReport = jnd;
-                                break outerloop;
-                            }
-                        }
-                    }
-                }
-            }
-
-        }*/
-
     public static void main(String[] args) throws IOException{
 
-        List<FileInfo> rawFileInfoList = new ArrayList<>();
-        List<FileInfo> richFileInfoList = new ArrayList<>();
+        List<FileInfo> fileInfoList = new ArrayList<>();
+/*
         get();
-
         if (2>1) {
             return;
         }
+*/
 
         Files.walk(Paths.get(new String(rb.getString("source_directory").getBytes("ISO-8859-1"), Charset.forName("UTF-8"))))
             .filter(p -> p.toString().endsWith(".xlsx"))
             .filter(p -> !p.toString().contains("cmn"))
             .filter(p -> !p.toString().contains("~$"))
-            .filter(p -> !p.toString().contains("temp_merge_file.xlsx"))
-//            .filter(p -> p.toString().contains("М.Видео") || p.toString().contains("36,6") || p.toString().contains("Детский мир"))
+            .filter(p -> !(p.toString().contains("balance.xlsx") || p.toString().contains("pl.xlsx") || p.toString().contains("cf.xlsx")))
+//            .filter(p -> p.toString().contains("Детский мир"))
 //            .filter(p -> p.toString().contains("2020"))
+            .peek(p -> System.out.println(p.toAbsolutePath()))
             .map(FileInfo::new)
-            .forEach(rawFileInfoList::add);
+//            .peek(p -> System.out.println(p.emitterName + " " + p.fileName))
+            .forEach(fileInfoList::add);
 
-//        System.out.println("size = " + ((RawBalanceSheetInfo) rawFileInfoList.get(0).balanceSheetInfoList.get(0)).itemList.size());
-/*        for (FileInfo rawFileInfo : rawFileInfoList) {
-            System.out.println(rawFileInfo.emitterName + " " + rawFileInfo.fileName);
-            FileInfo.getRich(rawFileInfo);
-        }*/
-//        rawFileInfoList.stream().map(FileInfo::getRich).forEach(p -> System.out.println(p.fileName));
-/*        if (1 < 2) {
-            return;
-        }*/
-        rawFileInfoList.stream()
-            .map(FileInfo::getRich)
-            .forEach(richFileInfoList::add);
+        System.out.println("Size = " + fileInfoList.size());
+        fileInfoList.stream().peek(p -> System.out.println(p.emitterName + " " + p.fileDate)).forEach(FileInfo::getRich);
 
-/*
-        for (ItemInfo itemInfo : ((RichBalanceSheetInfo) richFileInfoList.get(0).balanceSheetInfoList.get(0)).itemInfoList) {
-//            if (itemInfo.itemHeaderFlag || itemInfo.itemSubtotalFlag) {
-            System.out.println("itemIndex = " + itemInfo.itemIndex + ", itemParentIndex = " + itemInfo.parentItemIndex + " " + itemInfo.itemHeaderFlag + " " + itemInfo.itemSubtotalFlag + " " + itemInfo.itemName + " |||| " + itemInfo.itemPureName);
-//            }
-        }
-*/
+        String sqlStageTmpDeletePath = Paths.get(rb.getString("stage_tmp_directory"), rb.getString("delete_directory")).toString();
+        String sqlStageTmpInsertPath = Paths.get(rb.getString("stage_tmp_directory"), rb.getString("insert_directory")).toString();
+        String sqlTransformLoadTmpDeletePath = Paths.get(rb.getString("transform_load_tmp_directory"), rb.getString("delete_directory")).toString();
+        String sqlTransformLoadTmpInsertPath = Paths.get(rb.getString("transform_load_tmp_directory"), rb.getString("insert_directory")).toString();
+        String sqlTransformLoadPath = Paths.get(rb.getString("transform_load_directory")).toString();
 
-
-//        for (int ii = 0; ii < richBalanceSheetInfo.itemInfoList.size(); ++ii) {
-
-
-//            if (richBalanceSheetInfo.itemInfoList.get(ii).itemHeaderFlag) {
-////                parentIndex = richBalanceSheetInfo.itemInfoList.get(ii).itemIndex;
-//                parentIndex = richBalanceSheetInfo.itemInfoList.subList(indStart,ii).stream().filter(p -> p.itemHeaderFlag).sorted(byIndex)
-//                    .skip(kk/*>0 ? kk-1 : 0*/).map(p -> p.itemIndex).findFirst().orElse(-4);
-//                System.out.println("itemName = " + richBalanceSheetInfo.itemInfoList.get(ii).itemName + ", kk = " + kk + ", parent = " + parentIndex);
-//                richBalanceSheetInfo.itemInfoList.subList(indStart,ii).stream().filter(p -> p.itemHeaderFlag).sorted(byIndex).forEach(p -> System.out.println(p.itemIndex + " " + p.itemName));
-//            }
-//            if (ii > 0
-//                && richBalanceSheetInfo.itemInfoList.get(ii).parentItemIndex == -1 // Родительский index не задан
-//                && /*(richBalanceSheetInfo.itemInfoList.get(ii-1).parentItemIndex != 0 && richBalanceSheetInfo.itemInfoList.get(ii).itemHeaderFlag
-//                || !*/richBalanceSheetInfo.itemInfoList.get(ii).itemHeaderFlag) {
-//                richBalanceSheetInfo.itemInfoList.get(ii).parentItemIndex = parentIndex;
-//            }
-///*            if (richBalanceSheetInfo.itemInfoList.get(ii).itemHeaderFlag) {
-//                ++kk;
-//            }*/
-//            if (richBalanceSheetInfo.itemInfoList.get(ii).itemSubtotalFlag) {
-//                ++kk;
-//            }
-//            if (richBalanceSheetInfo.itemInfoList.get(ii).parentItemIndex == 0 && richBalanceSheetInfo.itemInfoList.get(ii).itemSubtotalFlag) {
-//                kk = 0;
-//                indStart = ii + 1;
-//            }
-//        }
-
-
-        String sqlInsertPath = Paths.get(rb.getString("tmp_directory"), rb.getString("insert_directory")).toString();
-        String sqlDeletePath = Paths.get(rb.getString("tmp_directory"), rb.getString("delete_directory")).toString();
-        String sqlTransformLoadPath = Paths.get("transform_load").toString();
-        /*        System.out.println(";");
-        System.out.println(Paths.get(sqlDeletePath, rb.getString("item_info")));
-        System.out.println(getQuery(Paths.get(sqlDeletePath, rb.getString("item_info"))));
-        System.out.println(";");*/
         try (Connection conn = DriverManager.getConnection(rb.getString("url"))) {
 
             conn.setAutoCommit(false);
 
-            try (PreparedStatement pstmtFileDelete = conn.prepareStatement(getQuery(Paths.get(sqlDeletePath, rb.getString("file_info"))));
-                 PreparedStatement pstmtItemDelete = conn.prepareStatement(getQuery(Paths.get(sqlDeletePath, rb.getString("item_info"))));
-                 PreparedStatement pstmtReportDelete = conn.prepareStatement(getQuery(Paths.get(sqlDeletePath, rb.getString("report_info"))));
-                 PreparedStatement pstmtItemFileBalanceDelete = conn.prepareStatement(getQuery(Paths.get(sqlDeletePath, "tmp_item_file_balance.sql")))) {
+            try (PreparedStatement pstmtFileDelete = conn.prepareStatement(getQuery(Paths.get(sqlStageTmpDeletePath, "tmp_file.sql")));
+
+                 PreparedStatement pstmtItemBalanceDelete = conn.prepareStatement(getQuery(Paths.get(sqlStageTmpDeletePath, "tmp_item_balance.sql")));
+                 PreparedStatement pstmtReportBalanceDelete = conn.prepareStatement(getQuery(Paths.get(sqlStageTmpDeletePath, "tmp_report_balance.sql")));
+                 PreparedStatement pstmtItemFileBalanceDelete = conn.prepareStatement(getQuery(Paths.get(sqlTransformLoadTmpDeletePath, "tmp_item_file_balance.sql")));
+
+                 PreparedStatement pstmtItemPLDelete = conn.prepareStatement(getQuery(Paths.get(sqlStageTmpDeletePath, "tmp_item_pl.sql")));
+                 PreparedStatement pstmtReportPLDelete = conn.prepareStatement(getQuery(Paths.get(sqlStageTmpDeletePath, "tmp_report_pl.sql")));
+                 PreparedStatement pstmtItemFilePLDelete = conn.prepareStatement(getQuery(Paths.get(sqlTransformLoadTmpDeletePath, "tmp_item_file_pl.sql")));
+
+                 PreparedStatement pstmtItemCFDelete = conn.prepareStatement(getQuery(Paths.get(sqlStageTmpDeletePath, "tmp_item_cf.sql")));
+                 PreparedStatement pstmtReportCFDelete = conn.prepareStatement(getQuery(Paths.get(sqlStageTmpDeletePath, "tmp_report_cf.sql")));
+                 PreparedStatement pstmtItemFileCFDelete = conn.prepareStatement(getQuery(Paths.get(sqlTransformLoadTmpDeletePath, "tmp_item_file_cf.sql")))
+                /*
+                 PreparedStatement pstmtItemCapitalDelete = conn.prepareStatement(getQuery(Paths.get(sqlDeleteTmpPath, rb.getString("item_capital"))));
+                 PreparedStatement pstmtReportCapitalDelete = conn.prepareStatement(getQuery(Paths.get(sqlDeleteTmpPath, rb.getString("report_capital"))));
+                 PreparedStatement pstmtItemFileCapitalDelete = conn.prepareStatement(getQuery(Paths.get(sqlDeleteTmpPath, "tmp_item_file_capital.sql")))*/) {
 
                 pstmtFileDelete.execute();
-                pstmtItemDelete.execute();
-                pstmtReportDelete.execute();
+
+                pstmtItemBalanceDelete.execute();
+                pstmtReportBalanceDelete.execute();
                 pstmtItemFileBalanceDelete.execute();
+
+                pstmtItemPLDelete.execute();
+                pstmtReportPLDelete.execute();
+                pstmtItemFilePLDelete.execute();
+
+                pstmtItemCFDelete.execute();
+                pstmtReportCFDelete.execute();
+                pstmtItemFileCFDelete.execute();
+/*
+                pstmtItemCapitalDelete.execute();
+                pstmtReportCapitalDelete.execute();
+                pstmtItemFileCapitalDelete.execute();
+*/
 
             }
 
             conn.commit();
 
-            for (FileInfo richFileInfo : richFileInfoList) {
+            for (FileInfo fileInfo : fileInfoList) {
 
-                try (PreparedStatement pstmtInsert = conn.prepareStatement(getQuery(Paths.get(sqlInsertPath, rb.getString("file_info"))))) {
-                    pstmtInsert.setString(1, richFileInfo.emitterName);
-                    pstmtInsert.setString(2, richFileInfo.fileName);
-                    pstmtInsert.setString(3, richFileInfo.fileDate.format(dateFormat));
-                    pstmtInsert.setString(4, richFileInfo.fileCurrency);
-                    pstmtInsert.setInt(5, richFileInfo.fileFactor);
+                try (PreparedStatement pstmtInsert = conn.prepareStatement(getQuery(Paths.get(sqlStageTmpInsertPath, "tmp_file.sql")))) {
+                    pstmtInsert.setString(1, fileInfo.emitterName);
+                    pstmtInsert.setString(2, fileInfo.fileName);
+                    pstmtInsert.setString(3, fileInfo.fileDate.format(dateFormat));
+                    pstmtInsert.setString(4, fileInfo.fileCurrency);
+                    pstmtInsert.setInt(5, fileInfo.fileFactor);
                     pstmtInsert.execute();
                 }
 
-                for (SheetInfo sheetInfo : richFileInfo.balanceSheetInfoList) {
+                BalanceSheetInfo balanceSheetInfo = (BalanceSheetInfo) fileInfo.sheetInfoMap.get("RICH_BALANCE");
 
-                    RichBalanceSheetInfo richBalanceSheetInfo = (RichBalanceSheetInfo) sheetInfo;
-
-                    try (PreparedStatement pstmtInsert = conn.prepareStatement(getQuery(Paths.get(sqlInsertPath, rb.getString("item_info"))))) {
-                        for (ItemInfo itemInfo : richBalanceSheetInfo.itemInfoList) {
-                            pstmtInsert.setString(1, richFileInfo.emitterName);
-                            pstmtInsert.setString(2, richFileInfo.fileName);
-                            pstmtInsert.setString(3, richFileInfo.fileDate.format(dateFormat));
-                            pstmtInsert.setInt(4, itemInfo.itemIndex);
-                            pstmtInsert.setInt(5, itemInfo.parentItemIndex);
-                            pstmtInsert.setString(6, itemInfo.itemSubtotalFlag ? "subtotal" : "not_subtotal");
-                            pstmtInsert.setString(7, itemInfo.itemHeaderFlag ? "header" : "not_header");
-                            pstmtInsert.setInt(8, itemInfo.itemLevel);
-                            pstmtInsert.setString(9, itemInfo.itemName);
-                            pstmtInsert.setString(10, itemInfo.itemPureName);
-                            pstmtInsert.addBatch();
-                        }
-                        pstmtInsert.executeBatch();
+                try (PreparedStatement pstmtInsert = conn.prepareStatement(getQuery(Paths.get(sqlStageTmpInsertPath, "tmp_item_balance.sql")))) {
+                    for (BalanceItemInfo balanceItemInfo : balanceSheetInfo.balanceItemInfoList) {
+                        pstmtInsert.setString(1, fileInfo.emitterName);
+                        pstmtInsert.setString(2, fileInfo.fileName);
+                        pstmtInsert.setInt(3, balanceItemInfo.itemIndex);
+                        pstmtInsert.setInt(4, balanceItemInfo.parentItemIndex);
+                        pstmtInsert.setString(5, balanceItemInfo.itemSubtotalFlag ? "subtotal" : "not_subtotal");
+                        pstmtInsert.setString(6, balanceItemInfo.itemHeaderFlag ? "header" : "not_header");
+                        pstmtInsert.setInt(7, balanceItemInfo.itemLevel);
+                        pstmtInsert.setString(8, balanceItemInfo.itemName);
+                        pstmtInsert.setString(9, balanceItemInfo.itemPureName);
+                        pstmtInsert.addBatch();
                     }
-
-                    try (PreparedStatement pstmtInsert = conn.prepareStatement(getQuery(Paths.get(sqlInsertPath, rb.getString("report_info"))))) {
-                        System.out.println("emitterName = " + richFileInfo.emitterName + " fileName = " + richFileInfo.fileName + " fileDate = " + richFileInfo.fileDate);
-                        for (ReportInfo reportInfo : richBalanceSheetInfo.reportInfoList) {
-                            pstmtInsert.setString(1, richFileInfo.emitterName);
-                            pstmtInsert.setString(2, richFileInfo.fileName);
-                            pstmtInsert.setString(3, richFileInfo.fileDate.format(dateFormat)); // Как будто бы не нужно, одного имени файла достаточно
-                            pstmtInsert.setInt(4, reportInfo.reportItemIndex);
-                            pstmtInsert.setString(5, reportInfo.reportDate.format(dateFormat));
-                            pstmtInsert.setInt(6, reportInfo.reportValue);
-                            pstmtInsert.addBatch();
-                        }
-                        pstmtInsert.executeBatch();
-                    }
+                    pstmtInsert.executeBatch();
                 }
+
+                try (PreparedStatement pstmtInsert = conn.prepareStatement(getQuery(Paths.get(sqlStageTmpInsertPath, "tmp_report_balance.sql")))) {
+                    for (ReportInfo reportInfo : balanceSheetInfo.reportInfoList) {
+                        pstmtInsert.setString(1, fileInfo.emitterName);
+                        pstmtInsert.setString(2, fileInfo.fileName);
+                        pstmtInsert.setInt(3, ((SingleDimensionReportInfo) reportInfo).reportItemIndex);
+                        pstmtInsert.setString(4, ((SingleDimensionReportInfo) reportInfo).reportDate.format(dateFormat));
+                        pstmtInsert.setInt(5, reportInfo.reportValue);
+                        pstmtInsert.addBatch();
+                    }
+                    pstmtInsert.executeBatch();
+                }
+
+                PLSheetInfo plSheetInfo = (PLSheetInfo) fileInfo.sheetInfoMap.get("RICH_PL");
+
+                try (PreparedStatement pstmtInsert = conn.prepareStatement(getQuery(Paths.get(sqlStageTmpInsertPath, "tmp_item_pl.sql")))) {
+//                    System.out.println(plSheetInfo.plItemInfoList.size());
+                    for (PLItemInfo plItemInfo : plSheetInfo.plItemInfoList) {
+//                        System.out.println("itemName = " + plItemInfo.itemName + ", itemPureName = " + plItemInfo.itemPureName);
+                        pstmtInsert.setString(1, fileInfo.emitterName);
+                        pstmtInsert.setString(2, fileInfo.fileName);
+                        pstmtInsert.setInt(3, plItemInfo.itemIndex);
+                        pstmtInsert.setString(4, plItemInfo.itemName);
+                        pstmtInsert.setString(5, plItemInfo.itemPureName);
+                        pstmtInsert.addBatch();
+                    }
+                    pstmtInsert.executeBatch();
+                }
+
+                try (PreparedStatement pstmtInsert = conn.prepareStatement(getQuery(Paths.get(sqlStageTmpInsertPath, "tmp_report_pl.sql")))) {
+//                            System.out.println("emitterName = " + richFileInfo.emitterName + " fileName = " + richFileInfo.fileName + " fileDate = " + richFileInfo.fileDate);
+                    for (ReportInfo reportInfo : plSheetInfo.reportInfoList) {
+                        pstmtInsert.setString(1, fileInfo.emitterName);
+                        pstmtInsert.setString(2, fileInfo.fileName);
+                        pstmtInsert.setInt(3, ((SingleDimensionReportInfo) reportInfo).reportItemIndex);
+                        pstmtInsert.setString(4, ((SingleDimensionReportInfo) reportInfo).reportDate.format(dateFormat));
+                        pstmtInsert.setInt(5, reportInfo.reportValue);
+                        pstmtInsert.addBatch();
+                    }
+                    pstmtInsert.executeBatch();
+                }
+
+                CFSheetInfo cfSheetInfo = (CFSheetInfo) fileInfo.sheetInfoMap.get("RICH_CF");
+
+                try (PreparedStatement pstmtInsert = conn.prepareStatement(getQuery(Paths.get(sqlStageTmpInsertPath, "tmp_item_cf.sql")))) {
+//                    System.out.println(plSheetInfo.plItemInfoList.size());
+                    for (CFItemInfo cfItemInfo : cfSheetInfo.cfItemInfoList) {
+//                        System.out.println("itemName = " + plItemInfo.itemName + ", itemPureName = " + plItemInfo.itemPureName);
+                        pstmtInsert.setString(1, fileInfo.emitterName);
+                        pstmtInsert.setString(2, fileInfo.fileName);
+                        pstmtInsert.setInt(3, cfItemInfo.itemIndex);
+                        pstmtInsert.setString(4, cfItemInfo.itemName);
+                        pstmtInsert.setString(5, cfItemInfo.itemPureName);
+                        pstmtInsert.addBatch();
+                    }
+                    pstmtInsert.executeBatch();
+                }
+
+                try (PreparedStatement pstmtInsert = conn.prepareStatement(getQuery(Paths.get(sqlStageTmpInsertPath, "tmp_report_cf.sql")))) {
+//                            System.out.println("emitterName = " + richFileInfo.emitterName + " fileName = " + richFileInfo.fileName + " fileDate = " + richFileInfo.fileDate);
+                    for (ReportInfo reportInfo : cfSheetInfo.reportInfoList) {
+                        pstmtInsert.setString(1, fileInfo.emitterName);
+                        pstmtInsert.setString(2, fileInfo.fileName);
+                        pstmtInsert.setInt(3, ((SingleDimensionReportInfo) reportInfo).reportItemIndex);
+                        pstmtInsert.setString(4, ((SingleDimensionReportInfo) reportInfo).reportDate.format(dateFormat));
+                        pstmtInsert.setInt(5, reportInfo.reportValue);
+                        pstmtInsert.addBatch();
+                    }
+                    pstmtInsert.executeBatch();
+                }
+
             }
-            try (PreparedStatement pstmtEmitter = conn.prepareStatement(getQuery(Paths.get(sqlTransformLoadPath, rb.getString("emitter"))));
-                 PreparedStatement pstmtFile = conn.prepareStatement(getQuery(Paths.get(sqlTransformLoadPath, rb.getString("file"))));
-                 PreparedStatement pstmtPureItem = conn.prepareStatement(getQuery(Paths.get(sqlTransformLoadPath, rb.getString("pure_item"))));
-                 PreparedStatement pstmtItem = conn.prepareStatement(getQuery(Paths.get(sqlTransformLoadPath, rb.getString("item"))));
-                 PreparedStatement pstmtFineItem = conn.prepareStatement(getQuery(Paths.get(sqlTransformLoadPath, rb.getString("fine_item"))));
-                 PreparedStatement pstmtTmpItemFileBalance = conn.prepareStatement(getQuery(Paths.get(sqlInsertPath, "tmp_item_file_balance.sql")));
-//                 PreparedStatement pstmtInsert = conn.prepareStatement(getQuery(Paths.get(sqlInsertPath, rb.getString("item_file_balance_2"))));
-                 PreparedStatement pstmtItemFileBalance1 = conn.prepareStatement(getQuery(Paths.get(sqlTransformLoadPath, rb.getString("item_file_balance_1"))));
-                 PreparedStatement pstmtItemFileBalance2 = conn.prepareStatement(getQuery(Paths.get(sqlTransformLoadPath, rb.getString("item_file_balance_2"))));
-                 PreparedStatement pstmtItemFileBalanceStat = conn.prepareStatement(getQuery(Paths.get(sqlTransformLoadPath, rb.getString("item_file_balance_statistic"))))) {
+            try (PreparedStatement pstmtEmitter = conn.prepareStatement(getQuery(Paths.get(sqlTransformLoadPath, "tbl_emitter.sql")));
+                 PreparedStatement pstmtFile = conn.prepareStatement(getQuery(Paths.get(sqlTransformLoadPath, "tbl_file.sql")));
+                 PreparedStatement pstmtPureItem = conn.prepareStatement(getQuery(Paths.get(sqlTransformLoadPath, "tbl_pure_item.sql")));
+                 PreparedStatement pstmtItem = conn.prepareStatement(getQuery(Paths.get(sqlTransformLoadPath, "tbl_item.sql")));
+                 PreparedStatement pstmtFineItem = conn.prepareStatement(getQuery(Paths.get(sqlTransformLoadPath, "tbl_fine_item.sql")));
+
+                 PreparedStatement pstmtTmpItemFileBalance = conn.prepareStatement(getQuery(Paths.get(sqlTransformLoadTmpInsertPath, "tmp_item_file_balance.sql")));
+                 PreparedStatement pstmtTmpItemFilePL = conn.prepareStatement(getQuery(Paths.get(sqlTransformLoadTmpInsertPath, "tmp_item_file_pl.sql")));
+                 PreparedStatement pstmtTmpItemFileCF = conn.prepareStatement(getQuery(Paths.get(sqlTransformLoadTmpInsertPath, "tmp_item_file_cf.sql")));
+
+                 PreparedStatement pstmtItemFileBalance1 = conn.prepareStatement(getQuery(Paths.get(sqlTransformLoadPath, "tbl_item_file_balance_1.sql")));
+                 PreparedStatement pstmtItemFileBalance2 = conn.prepareStatement(getQuery(Paths.get(sqlTransformLoadPath, "tbl_item_file_balance_2.sql")));
+                 PreparedStatement pstmtItemFileBalanceStat = conn.prepareStatement(getQuery(Paths.get(sqlTransformLoadPath, "tbl_item_file_balance_statistic.sql")));
+
+                 PreparedStatement pstmtItemFilePL1 = conn.prepareStatement(getQuery(Paths.get(sqlTransformLoadPath, "tbl_item_file_pl_1.sql")));
+                 PreparedStatement pstmtItemFilePLStat = conn.prepareStatement(getQuery(Paths.get(sqlTransformLoadPath, "tbl_item_file_pl_statistic.sql")));
+
+                PreparedStatement pstmtItemFileCF1 = conn.prepareStatement(getQuery(Paths.get(sqlTransformLoadPath, "tbl_item_file_cf_1.sql")));
+                PreparedStatement pstmtItemFileCFStat = conn.prepareStatement(getQuery(Paths.get(sqlTransformLoadPath, "tbl_item_file_cf_statistic.sql")))) {
 
                 pstmtEmitter.execute();
                 pstmtFile.execute();
                 pstmtPureItem.execute();
                 pstmtItem.execute();
                 pstmtFineItem.execute();
+
                 pstmtTmpItemFileBalance.execute();
+                pstmtTmpItemFilePL.execute();
+                pstmtTmpItemFileCF.execute();
+
                 pstmtItemFileBalance1.execute();
                 pstmtItemFileBalance2.execute();
                 pstmtItemFileBalanceStat.execute();
+
+                pstmtItemFilePL1.execute();
+                pstmtItemFilePLStat.execute();
+
+                pstmtItemFileCF1.execute();
+                pstmtItemFileCFStat.execute();
 
             }
             conn.commit();
