@@ -6,9 +6,8 @@ import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.example.item.BalanceItemInfo;
-import org.example.item.CFItemInfo;
-import org.example.item.PLItemInfo;
+import org.example.item.*;
+import org.example.report.DoubleDimensionReportInfo;
 import org.example.report.SingleDimensionReportInfo;
 import org.example.sheet.*;
 
@@ -65,6 +64,91 @@ public class FileInfo {
             this.fileCurrency = "USD";
         }
 
+    }
+
+    private static DoubleDimensionSheetInfo parseDoubleDimensionSheetInfo(Sheet workSheet) {
+        DoubleDimensionSheetInfo sheetInfo = new DoubleDimensionSheetInfo();
+
+        sheetInfo.verticalItemList = new ArrayList<>();
+        sheetInfo.horizontalItemList = new ArrayList<>();
+        sheetInfo.reportDateList = new ArrayList<>();
+        sheetInfo.reportInfo = new HashMap<>();
+
+        int maxColumnIndex = 0;
+        Map<String, Map<String, Integer>> reportItemLine = new HashMap<>(); // <Вертикальная статья, <Горизонтальная статья, Показатель>>
+
+        LocalDate previousReportDate = null;
+        LocalDate reportDate = null;
+
+        labelRow:
+        for (Row row : workSheet) { //  Первая строка содержит информацию о множителе (млн, тыс), валюте и отчётных годах
+
+            Map<String, Integer> reportLine = new HashMap<>(); // <Горизонтальная статья, Показатель>
+            String verticalItem = null;
+            for (Cell cell : row) {
+                maxColumnIndex = Math.max(maxColumnIndex, cell.getColumnIndex());
+            }
+            for (Cell cell : row) {
+                if (cell.getRowIndex() == 0) {
+                    if (cell.getColumnIndex() > 1) { // Во всех столбцах начиная с третьего горизонтальные статьи
+                        if (cell.getCellType() == CellType.STRING) {
+                            sheetInfo.horizontalItemList.add(cell.getStringCellValue());
+                        } else {
+                            throw new RuntimeException("Invalid cell type: " + cell.getCellType().toString());
+                        }
+                    }
+                } else {
+                    if (cell.getColumnIndex() == 0) { // Года
+                        if (cell.getCellType() == CellType.NUMERIC) {
+                            int numericCellValue = (int) cell.getNumericCellValue();
+                            if (numericCellValue != 0) {
+                                reportDate = LocalDate.of(numericCellValue, Month.DECEMBER, 31);
+                                if (!sheetInfo.reportDateList.contains(reportDate)) {
+                                    sheetInfo.reportDateList.add(reportDate);
+                                }
+                            } else {
+                                continue labelRow;
+                            }
+                        } else {
+                            continue labelRow;
+                        }
+                    } else if (cell.getColumnIndex() == 1) { // Во втором столбце вертикальные статьи
+                        if (cell.getCellType() == CellType.STRING) {
+                            verticalItem = cell.getStringCellValue();
+                            if (verticalItem != null && !verticalItem.isEmpty()) {
+                                if (!sheetInfo.verticalItemList.contains(verticalItem)) {
+                                    sheetInfo.verticalItemList.add(verticalItem);
+                                }
+                            } else {
+                                continue labelRow;
+                            }
+                        } else {
+                            continue labelRow;
+                        }
+                    } else { // Показатели отчётности
+                        if (cell.getCellType() == CellType.NUMERIC) {
+                            int numericCellValue = (int) cell.getNumericCellValue();
+                            if (numericCellValue != 0) {
+                                int ind = cell.getColumnIndex();
+                                reportLine.put(sheetInfo.horizontalItemList.get(cell.getColumnIndex()-2), numericCellValue);
+                            }
+                        }
+                    }
+                }
+            }
+            if (previousReportDate != null && !previousReportDate.equals(reportDate)) {
+                sheetInfo.reportInfo.put(previousReportDate, reportItemLine);
+                reportItemLine = null;
+            }
+            if (reportDate != null) {
+                reportItemLine = reportItemLine == null ? new HashMap<>() : reportItemLine;
+                reportItemLine.put(verticalItem, reportLine);
+            }
+            previousReportDate = reportDate;
+        }
+        sheetInfo.reportInfo.put(reportDate, reportItemLine);
+
+        return sheetInfo;
     }
 
     private static SingleDimensionSheetInfo parseSingleDimensionSheetInfo(Sheet workSheet) {
@@ -173,6 +257,9 @@ public class FileInfo {
                         break;
                     case "CASH_FLOW":
                         sheetInfoMap.put("CF", parseSingleDimensionSheetInfo(workSheet));
+                        break;
+                    case "CAPITAL":
+                        sheetInfoMap.put("CAPITAL", parseDoubleDimensionSheetInfo(workSheet));
                         break;
                 }
 
@@ -391,11 +478,87 @@ public class FileInfo {
 
     }
 
+    private static CapitalSheetInfo getCapitalSheetInfo(DoubleDimensionSheetInfo doubleDimensionSheetInfo) {
+
+        DoubleDimensionSheetInfo rawCapitalSheetInfo = new DoubleDimensionSheetInfo(doubleDimensionSheetInfo);
+        CapitalSheetInfo richCapitalSheetInfo = new CapitalSheetInfo(rawCapitalSheetInfo);
+
+        richCapitalSheetInfo.capitalItemInfoList = new ArrayList<>();
+        richCapitalSheetInfo.reportInfoList = new ArrayList<>();
+
+        // Если отсутствует значение "На начало периода" для любого года кроме первого,
+        // скопировать его из значения "На конец периода" предыдущего года
+
+        for (int ind=0; ind < doubleDimensionSheetInfo.reportDateList.size(); ++ind) {
+            if (ind==0) {
+                continue;
+            }
+            if (!rawCapitalSheetInfo.reportInfo.get(rawCapitalSheetInfo.reportDateList.get(ind)).keySet().contains("На начало периода")) {
+                Map<String, Map<String, Integer>> tmpInfo = rawCapitalSheetInfo.reportInfo.get(rawCapitalSheetInfo.reportDateList.get(ind));
+                tmpInfo.put("На начало периода", rawCapitalSheetInfo.reportInfo.get(rawCapitalSheetInfo.reportDateList.get(ind-1)).get("На конец периода"));
+            }
+        }
+
+        for (LocalDate reportDate : rawCapitalSheetInfo.reportInfo.keySet()) {
+
+            Map<String, Map<String, Integer>> reportElement = rawCapitalSheetInfo.reportInfo.get(reportDate);
+            for (String verticalItemString : reportElement.keySet()) {
+
+                Map<String, Integer> reportSubElement = reportElement.get(verticalItemString);
+                for (String horizontalItemString : reportSubElement.keySet()) {
+
+                    CapitalItemInfo capitalItemInfo = new CapitalItemInfo();
+
+                    capitalItemInfo.verticalItemInfo = new ItemInfo();
+                    capitalItemInfo.verticalItemInfo.itemIndex = rawCapitalSheetInfo
+                        .verticalItemList
+                        .indexOf(verticalItemString);
+
+                    capitalItemInfo.verticalItemInfo.itemName = verticalItemString;
+
+                    capitalItemInfo.verticalItemInfo.itemPureName = capitalItemInfo
+                        .verticalItemInfo
+                        .itemName
+                        .toLowerCase()
+                        .replaceAll("[\\p{Punct}\\p{Blank}]+", " ")
+                        .trim();
+
+                    capitalItemInfo.horizontalItemInfo = new ItemInfo();
+                    capitalItemInfo.horizontalItemInfo.itemIndex = rawCapitalSheetInfo
+                        .horizontalItemList
+                        .indexOf(horizontalItemString);
+
+                    capitalItemInfo.horizontalItemInfo.itemName = horizontalItemString;
+                    capitalItemInfo.horizontalItemInfo.itemPureName = capitalItemInfo
+                        .horizontalItemInfo
+                        .itemName
+                        .toLowerCase()
+                        .replaceAll("[\\p{Punct}\\p{Blank}]+", " ")
+                        .trim();
+
+                    richCapitalSheetInfo.capitalItemInfoList.add(capitalItemInfo);
+
+                    DoubleDimensionReportInfo capitalReportInfo = new DoubleDimensionReportInfo(
+                        capitalItemInfo.horizontalItemInfo.itemIndex,
+                        capitalItemInfo.verticalItemInfo.itemIndex,
+                        reportDate,
+                        reportSubElement.get(horizontalItemString));
+
+                    richCapitalSheetInfo.reportInfoList.add(capitalReportInfo);
+                }
+            }
+        }
+
+        return richCapitalSheetInfo;
+
+    }
+
     public void getRich() {
 
         sheetInfoMap.put("RICH_BALANCE", getBalanceSheetInfo((SingleDimensionSheetInfo) sheetInfoMap.get("BALANCE")));
         sheetInfoMap.put("RICH_PL", getPLSheetInfo((SingleDimensionSheetInfo) sheetInfoMap.get("PL")));
         sheetInfoMap.put("RICH_CF", getCFSheetInfo((SingleDimensionSheetInfo) sheetInfoMap.get("CF")));
+        sheetInfoMap.put("RICH_CAPITAL", getCapitalSheetInfo((DoubleDimensionSheetInfo) sheetInfoMap.get("CAPITAL")));
 
     }
 }

@@ -14,3 +14,11 @@ SELECT
 SELECT
        item_pure_name
   FROM tmp_item_cf
+ UNION
+SELECT
+       item_horizontal_pure_name
+  FROM tmp_item_capital
+ UNION
+SELECT
+       item_vertical_pure_name
+  FROM tmp_item_capital

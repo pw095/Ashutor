@@ -20,7 +20,17 @@ SELECT
         SELECT
                item_name,
                item_pure_name
-          FROM tmp_item_cf) stmt
+          FROM tmp_item_cf
+         UNION
+        SELECT
+               item_horizontal_name,
+               item_horizontal_pure_name
+          FROM tmp_item_capital
+         UNION
+        SELECT
+               item_vertical_name,
+               item_vertical_pure_name
+          FROM tmp_item_capital) stmt
        JOIN
        tbl_pure_item pure_item
            ON pure_item.pure_item_name = stmt.item_pure_name

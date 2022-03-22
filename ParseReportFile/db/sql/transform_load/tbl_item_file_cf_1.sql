@@ -16,4 +16,4 @@ SELECT
                          NULL
                     FROM tbl_item_file_cf
                    WHERE ifcf_file_id = tmp.ifcf_file_id
-                     AND ifcf_item_id = tmp.ifcf_item_id)
+                     AND ifcf_index = tmp.ifcf_index)

@@ -24,4 +24,4 @@ SELECT
                          NULL
                     FROM tbl_item_file_balance
                    WHERE ifb_file_id = tmp.ifb_file_id
-                     AND ifb_item_id = tmp.ifb_item_id)
+                     AND ifb_index = tmp.ifb_index)
