@@ -6,18 +6,18 @@ import org.example.item.BalanceItemInfo;
 import java.util.ArrayList;
 import java.util.List;
 
-public class BalanceSheetInfo extends SheetInfo {
+public class BalanceSheetInfoClass extends SheetInfoClass {
 
     // Обработанная информация с листа
     public List<BalanceItemInfo> balanceItemInfoList;
     public List<ReportInfo> reportInfoList;
 
-    public BalanceSheetInfo() {}
+    public BalanceSheetInfoClass() {}
 
-    public BalanceSheetInfo(SheetInfo sheetInfo) {
+    public BalanceSheetInfoClass(SheetInfoClass sheetInfo) {
         super(sheetInfo);
     }
-    public BalanceSheetInfo(BalanceSheetInfo balanceSheetInfo) {
+    public BalanceSheetInfoClass(BalanceSheetInfoClass balanceSheetInfo) {
         super(balanceSheetInfo);
         if (balanceSheetInfo != null) {
             if (balanceSheetInfo.balanceItemInfoList != null && !balanceSheetInfo.balanceItemInfoList.isEmpty()) {

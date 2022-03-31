@@ -6,18 +6,18 @@ import org.example.report.ReportInfo;
 import java.util.ArrayList;
 import java.util.List;
 
-public class PLSheetInfo extends SheetInfo {
+public class PLSheetInfoClass extends SheetInfoClass {
 
     // Обработанная информация с листа
     public List<PLItemInfo> plItemInfoList;
     public List<ReportInfo> reportInfoList;
 
-    public PLSheetInfo() {}
+    public PLSheetInfoClass() {}
 
-    public PLSheetInfo(SheetInfo sheetInfo) {
+    public PLSheetInfoClass(SheetInfoClass sheetInfo) {
         super(sheetInfo);
     }
-    public PLSheetInfo(PLSheetInfo plSheetInfo) {
+    public PLSheetInfoClass(PLSheetInfoClass plSheetInfo) {
         super(plSheetInfo);
         if (plSheetInfo != null) {
             if (plSheetInfo.plItemInfoList != null && !plSheetInfo.plItemInfoList.isEmpty()) {

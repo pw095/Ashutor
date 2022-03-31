@@ -6,18 +6,18 @@ import org.example.report.ReportInfo;
 import java.util.ArrayList;
 import java.util.List;
 
-public class CFSheetInfo extends SheetInfo {
+public class CFSheetInfoClass extends SheetInfoClass {
 
     // Обработанная информация с листа
     public List<CFItemInfo> cfItemInfoList;
     public List<ReportInfo> reportInfoList;
 
-    public CFSheetInfo() {}
+    public CFSheetInfoClass() {}
 
-    public CFSheetInfo(SheetInfo sheetInfo) {
+    public CFSheetInfoClass(SheetInfoClass sheetInfo) {
         super(sheetInfo);
     }
-    public CFSheetInfo(CFSheetInfo cfSheetInfo) {
+    public CFSheetInfoClass(CFSheetInfoClass cfSheetInfo) {
         super(cfSheetInfo);
         if (cfSheetInfo != null) {
             if (cfSheetInfo.cfItemInfoList != null && !cfSheetInfo.cfItemInfoList.isEmpty()) {

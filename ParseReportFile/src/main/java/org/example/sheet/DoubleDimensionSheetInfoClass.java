@@ -3,7 +3,7 @@ package org.example.sheet;
 import java.time.LocalDate;
 import java.util.*;
 
-public class DoubleDimensionSheetInfo extends SheetInfo {
+public class DoubleDimensionSheetInfoClass extends SheetInfoClass {
     // Необработанная информация с листа
 
     // Необработанный список статей
@@ -13,9 +13,9 @@ public class DoubleDimensionSheetInfo extends SheetInfo {
     // Необработанные данные
     public Map<LocalDate, Map<String, Map<String, Integer>>> reportInfo;
 
-    public DoubleDimensionSheetInfo() {}
+    public DoubleDimensionSheetInfoClass() {}
 
-    public DoubleDimensionSheetInfo(DoubleDimensionSheetInfo sheetInfo) {
+    public DoubleDimensionSheetInfoClass(DoubleDimensionSheetInfoClass sheetInfo) {
         super(sheetInfo);
         if (sheetInfo != null) {
             if (sheetInfo.horizontalItemList != null && !sheetInfo.horizontalItemList.isEmpty()) {

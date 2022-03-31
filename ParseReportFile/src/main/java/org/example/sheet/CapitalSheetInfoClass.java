@@ -1,24 +1,23 @@
 package org.example.sheet;
 
 import org.example.item.CapitalItemInfo;
-import org.example.item.PLItemInfo;
 import org.example.report.ReportInfo;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class CapitalSheetInfo extends SheetInfo {
+public class CapitalSheetInfoClass extends SheetInfoClass {
 
     // Обработанная информация с листа
     public List<CapitalItemInfo> capitalItemInfoList;
     public List<ReportInfo> reportInfoList;
 
-    public CapitalSheetInfo() {}
+    public CapitalSheetInfoClass() {}
 
-    public CapitalSheetInfo(SheetInfo sheetInfo) {
+    public CapitalSheetInfoClass(SheetInfoClass sheetInfo) {
         super(sheetInfo);
     }
-    public CapitalSheetInfo(CapitalSheetInfo capitalSheetInfo) {
+    public CapitalSheetInfoClass(CapitalSheetInfoClass capitalSheetInfo) {
         super(capitalSheetInfo);
         if (capitalSheetInfo != null) {
             if (capitalSheetInfo.capitalItemInfoList != null && !capitalSheetInfo.capitalItemInfoList.isEmpty()) {

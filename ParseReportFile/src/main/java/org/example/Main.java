@@ -3,6 +3,8 @@ package org.example;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.entity.LoadReference;
+import org.entity.LoadReferenceTemp;
 import org.example.item.BalanceItemInfo;
 import org.example.item.CFItemInfo;
 import org.example.item.CapitalItemInfo;
@@ -11,9 +13,11 @@ import org.example.report.DoubleDimensionReportInfo;
 import org.example.report.ReportInfo;
 import org.example.report.SingleDimensionReportInfo;
 import org.example.sheet.*;
+import org.excel.ReadExcelReport;
 
 import java.io.*;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -739,6 +743,12 @@ public class Main {
 
     public static void main(String[] args) throws IOException{
 
+//        new LoadReferenceTemp();
+//        new LoadReference();
+        new ReadExcelReport(new String(rb.getString("source_directory").getBytes(StandardCharsets.ISO_8859_1), StandardCharsets.UTF_8));
+        if (2 > 1) {
+            return;
+        }
         List<FileInfo> fileInfoList = new ArrayList<>();
         get();
         if (2>1) {
@@ -826,7 +836,7 @@ public class Main {
                     pstmtInsert.execute();
                 }
 
-                BalanceSheetInfo balanceSheetInfo = (BalanceSheetInfo) fileInfo.sheetInfoMap.get("RICH_BALANCE");
+                BalanceSheetInfoClass balanceSheetInfo = (BalanceSheetInfoClass) fileInfo.sheetInfoMap.get("RICH_BALANCE");
 
                 try (PreparedStatement pstmtInsert = conn.prepareStatement(getQuery(Paths.get(sqlStageTmpInsertPath, "tmp_item_balance.sql")))) {
                     for (BalanceItemInfo balanceItemInfo : balanceSheetInfo.balanceItemInfoList) {
@@ -856,7 +866,7 @@ public class Main {
                     pstmtInsert.executeBatch();
                 }
 
-                PLSheetInfo plSheetInfo = (PLSheetInfo) fileInfo.sheetInfoMap.get("RICH_PL");
+                PLSheetInfoClass plSheetInfo = (PLSheetInfoClass) fileInfo.sheetInfoMap.get("RICH_PL");
 
                 try (PreparedStatement pstmtInsert = conn.prepareStatement(getQuery(Paths.get(sqlStageTmpInsertPath, "tmp_item_pl.sql")))) {
 //                    System.out.println(plSheetInfo.plItemInfoList.size());
@@ -885,7 +895,7 @@ public class Main {
                     pstmtInsert.executeBatch();
                 }
 
-                CFSheetInfo cfSheetInfo = (CFSheetInfo) fileInfo.sheetInfoMap.get("RICH_CF");
+                CFSheetInfoClass cfSheetInfo = (CFSheetInfoClass) fileInfo.sheetInfoMap.get("RICH_CF");
 
                 try (PreparedStatement pstmtInsert = conn.prepareStatement(getQuery(Paths.get(sqlStageTmpInsertPath, "tmp_item_cf.sql")))) {
 //                    System.out.println(plSheetInfo.plItemInfoList.size());
@@ -914,7 +924,7 @@ public class Main {
                     pstmtInsert.executeBatch();
                 }
 
-                CapitalSheetInfo capitalSheetInfo = (CapitalSheetInfo) fileInfo.sheetInfoMap.get("RICH_CAPITAL");
+                CapitalSheetInfoClass capitalSheetInfo = (CapitalSheetInfoClass) fileInfo.sheetInfoMap.get("RICH_CAPITAL");
 
                 try (PreparedStatement pstmtInsert = conn.prepareStatement(getQuery(Paths.get(sqlStageTmpInsertPath, "tmp_item_capital.sql")))) {
                     for (CapitalItemInfo capitalItemInfo : capitalSheetInfo.capitalItemInfoList) {

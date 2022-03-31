@@ -1,7 +1,5 @@
 package org.example.report;
 
-import org.example.sheet.SingleDimensionSheetInfo;
-
 import java.time.LocalDate;
 
 public class SingleDimensionReportInfo extends ReportInfo {

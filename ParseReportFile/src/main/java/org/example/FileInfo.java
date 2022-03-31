@@ -31,7 +31,7 @@ public class FileInfo {
     public int fileFactor;
 
     // Элемент списка соответствует одной странице
-    public Map<String, SheetInfo> sheetInfoMap;
+    public Map<String, SheetInfoClass> sheetInfoMap;
 
     public FileInfo() {}
 
@@ -66,8 +66,8 @@ public class FileInfo {
 
     }
 
-    private static DoubleDimensionSheetInfo parseDoubleDimensionSheetInfo(Sheet workSheet) {
-        DoubleDimensionSheetInfo sheetInfo = new DoubleDimensionSheetInfo();
+    private static DoubleDimensionSheetInfoClass parseDoubleDimensionSheetInfo(Sheet workSheet) {
+        DoubleDimensionSheetInfoClass sheetInfo = new DoubleDimensionSheetInfoClass();
 
         sheetInfo.verticalItemList = new ArrayList<>();
         sheetInfo.horizontalItemList = new ArrayList<>();
@@ -151,8 +151,8 @@ public class FileInfo {
         return sheetInfo;
     }
 
-    private static SingleDimensionSheetInfo parseSingleDimensionSheetInfo(Sheet workSheet) {
-        SingleDimensionSheetInfo sheetInfo = new SingleDimensionSheetInfo();
+    private static SingleDimensionSheetInfoClass parseSingleDimensionSheetInfo(Sheet workSheet) {
+        SingleDimensionSheetInfoClass sheetInfo = new SingleDimensionSheetInfoClass();
 
         sheetInfo.itemList = new ArrayList<>();
         sheetInfo.reportDateList = new ArrayList<>();
@@ -280,10 +280,10 @@ public class FileInfo {
 
     }
 
-    private static BalanceSheetInfo getBalanceSheetInfo(SingleDimensionSheetInfo singleDimensionSheetInfo) {
+    private static BalanceSheetInfoClass getBalanceSheetInfo(SingleDimensionSheetInfoClass singleDimensionSheetInfo) {
 
-        SingleDimensionSheetInfo rawBalanceSheetInfo = new SingleDimensionSheetInfo(singleDimensionSheetInfo);
-        BalanceSheetInfo richBalanceSheetInfo = new BalanceSheetInfo(singleDimensionSheetInfo);
+        SingleDimensionSheetInfoClass rawBalanceSheetInfo = new SingleDimensionSheetInfoClass(singleDimensionSheetInfo);
+        BalanceSheetInfoClass richBalanceSheetInfo = new BalanceSheetInfoClass(singleDimensionSheetInfo);
 
         for (int k = rawBalanceSheetInfo.itemList.size() - 1; k >= 0; --k) {
             if (rawBalanceSheetInfo.itemList.get(k).isEmpty()) {
@@ -424,10 +424,10 @@ public class FileInfo {
 
     }
 
-    private static PLSheetInfo getPLSheetInfo(SingleDimensionSheetInfo singleDimensionSheetInfo) {
+    private static PLSheetInfoClass getPLSheetInfo(SingleDimensionSheetInfoClass singleDimensionSheetInfo) {
 
-        SingleDimensionSheetInfo rawPLSheetInfo = new SingleDimensionSheetInfo(singleDimensionSheetInfo);
-        PLSheetInfo richPLSheetInfo = new PLSheetInfo(rawPLSheetInfo);
+        SingleDimensionSheetInfoClass rawPLSheetInfo = new SingleDimensionSheetInfoClass(singleDimensionSheetInfo);
+        PLSheetInfoClass richPLSheetInfo = new PLSheetInfoClass(rawPLSheetInfo);
 
         richPLSheetInfo.plItemInfoList = new ArrayList<>();
 
@@ -451,10 +451,10 @@ public class FileInfo {
 
     }
 
-    private static CFSheetInfo getCFSheetInfo(SingleDimensionSheetInfo singleDimensionSheetInfo) {
+    private static CFSheetInfoClass getCFSheetInfo(SingleDimensionSheetInfoClass singleDimensionSheetInfo) {
 
-        SingleDimensionSheetInfo rawCFSheetInfo = new SingleDimensionSheetInfo(singleDimensionSheetInfo);
-        CFSheetInfo richCFSheetInfo = new CFSheetInfo(rawCFSheetInfo);
+        SingleDimensionSheetInfoClass rawCFSheetInfo = new SingleDimensionSheetInfoClass(singleDimensionSheetInfo);
+        CFSheetInfoClass richCFSheetInfo = new CFSheetInfoClass(rawCFSheetInfo);
 
         richCFSheetInfo.cfItemInfoList = new ArrayList<>();
 
@@ -478,10 +478,10 @@ public class FileInfo {
 
     }
 
-    private static CapitalSheetInfo getCapitalSheetInfo(DoubleDimensionSheetInfo doubleDimensionSheetInfo) {
+    private static CapitalSheetInfoClass getCapitalSheetInfo(DoubleDimensionSheetInfoClass doubleDimensionSheetInfo) {
 
-        DoubleDimensionSheetInfo rawCapitalSheetInfo = new DoubleDimensionSheetInfo(doubleDimensionSheetInfo);
-        CapitalSheetInfo richCapitalSheetInfo = new CapitalSheetInfo(rawCapitalSheetInfo);
+        DoubleDimensionSheetInfoClass rawCapitalSheetInfo = new DoubleDimensionSheetInfoClass(doubleDimensionSheetInfo);
+        CapitalSheetInfoClass richCapitalSheetInfo = new CapitalSheetInfoClass(rawCapitalSheetInfo);
 
         richCapitalSheetInfo.capitalItemInfoList = new ArrayList<>();
         richCapitalSheetInfo.reportInfoList = new ArrayList<>();
@@ -555,10 +555,10 @@ public class FileInfo {
 
     public void getRich() {
 
-        sheetInfoMap.put("RICH_BALANCE", getBalanceSheetInfo((SingleDimensionSheetInfo) sheetInfoMap.get("BALANCE")));
-        sheetInfoMap.put("RICH_PL", getPLSheetInfo((SingleDimensionSheetInfo) sheetInfoMap.get("PL")));
-        sheetInfoMap.put("RICH_CF", getCFSheetInfo((SingleDimensionSheetInfo) sheetInfoMap.get("CF")));
-        sheetInfoMap.put("RICH_CAPITAL", getCapitalSheetInfo((DoubleDimensionSheetInfo) sheetInfoMap.get("CAPITAL")));
+        sheetInfoMap.put("RICH_BALANCE", getBalanceSheetInfo((SingleDimensionSheetInfoClass) sheetInfoMap.get("BALANCE")));
+        sheetInfoMap.put("RICH_PL", getPLSheetInfo((SingleDimensionSheetInfoClass) sheetInfoMap.get("PL")));
+        sheetInfoMap.put("RICH_CF", getCFSheetInfo((SingleDimensionSheetInfoClass) sheetInfoMap.get("CF")));
+        sheetInfoMap.put("RICH_CAPITAL", getCapitalSheetInfo((DoubleDimensionSheetInfoClass) sheetInfoMap.get("CAPITAL")));
 
     }
 }
