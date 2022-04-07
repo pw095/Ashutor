@@ -8,7 +8,7 @@ import java.util.ResourceBundle;
 
 import static org.database.Query.getQuery;
 
-public final class LoadReference implements WriteDatabase {
+public final class LoadPersistent implements WriteDatabase {
 
     private static final String fieldFile = "tbl_field.sql";
     private static final String emitterFile = "tbl_emitter.sql";
@@ -67,7 +67,7 @@ public final class LoadReference implements WriteDatabase {
 
     }
 
-    public LoadReference() {
+    public LoadPersistent() {
 
         ResourceBundle rb = ResourceBundle.getBundle("application");
         writeDestination(rb.getString("url_persist"));

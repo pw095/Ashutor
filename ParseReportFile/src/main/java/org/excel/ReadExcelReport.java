@@ -10,6 +10,7 @@ import org.example.sheet.*;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -17,6 +18,23 @@ import java.util.*;
 public class ReadExcelReport extends AbstractReport implements ReadExcel {
 
     public static final DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+    private String fileName;
+    private String emitterName;
+
+    public String getFileName() {
+        return fileName;
+    }
+    public void setFileName(String fileName) {
+        this.fileName = fileName;
+    }
+
+    public String getEmitterName() {
+        return emitterName;
+    }
+    public void setEmitterName(String emitterName) {
+        this.emitterName = emitterName;
+    }
 
     protected void setRef(Object object) {
 
@@ -26,7 +44,7 @@ public class ReadExcelReport extends AbstractReport implements ReadExcel {
 
             for (Row row : sheet) {
                 String stringCellValue = "";
-                for (Cell cell :row) {
+                for (Cell cell : row) {
                     int columnIndex = cell.getColumnIndex();
                     if (columnIndex == 0) {
                         stringCellValue = getStringCellValue(cell);
@@ -508,6 +526,10 @@ public class ReadExcelReport extends AbstractReport implements ReadExcel {
 
     @Override
     public void readSource(String sourcePath) {
+
+        setFileName(Paths.get(sourcePath).getFileName().toString());
+        setEmitterName(Paths.get(sourcePath).getParent().getFileName().toString());
+
         try (FileInputStream inputStream = new FileInputStream(new File(sourcePath))) {
             XSSFWorkbook workbook = new XSSFWorkbook(inputStream);
 

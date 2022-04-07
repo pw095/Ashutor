@@ -4,18 +4,11 @@ import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.entity.AbstractReport;
-import org.example.item.BalanceItemInfo;
-import org.example.item.CFItemInfo;
-import org.example.item.CapitalItemInfo;
-import org.example.item.PLItemInfo;
-import org.example.report.DoubleDimensionReportInfoOld;
-import org.example.report.ReportInfo;
-import org.example.report.SingleDimensionReportInfoOld;
+import org.entity.LoadTemp;
 import org.example.sheet.*;
 import org.excel.ReadExcelReport;
 
 import java.io.*;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -776,8 +769,11 @@ public class Main {
         }
 */
 
-        AbstractReport report = new ReadExcelReport(new String(rb.getString("source_directory").getBytes(StandardCharsets.ISO_8859_1), StandardCharsets.UTF_8));
-        BalanceRichSheetInfo balanceRichSheetInfo = new BalanceRichSheetInfo(report.getBalanceRawSheetInfo());
+//        AbstractReport report = new ReadExcelReport(new String(rb.getString("source_directory").getBytes(StandardCharsets.ISO_8859_1), StandardCharsets.UTF_8));
+        LoadTemp loadTemp = new LoadTemp(new String(rb.getString("source_directory").getBytes(StandardCharsets.ISO_8859_1), StandardCharsets.UTF_8));
+/*        BalanceRichSheetInfo balanceRichSheetInfo = new BalanceRichSheetInfo(report.getBalanceRawSheetInfo());
+        report.setBalanceRichSheetInfo(report.getBalanceRichSheetInfo());
+
 
         Map<String, SingleDimensionRawSheetInfo> rawMap1 = report.getSingleDimensionRawSheetInfoMap();
         Map<String, SingleDimensionRichSheetInfo> singleDimensionRichSheetInfoMap = new HashMap<>();
@@ -785,6 +781,8 @@ public class Main {
         for (String key : rawMap1.keySet()) {
             singleDimensionRichSheetInfoMap.put(key, new SingleDimensionRichSheetInfo(rawMap1.get(key)));
         }
+        report.setSingleDimensionRichSheetInfoMap(singleDimensionRichSheetInfoMap);
+
 
         Map<String, DoubleDimensionRawSheetInfo> rawMap2 = report.getDoubleDimensionRawSheetInfoMap();
         Map<String, DoubleDimensionRichSheetInfo> doubleDimensionRichSheetInfoMap = new HashMap<>();
@@ -792,6 +790,9 @@ public class Main {
         for (String key : rawMap2.keySet()) {
             doubleDimensionRichSheetInfoMap.put(key, new DoubleDimensionRichSheetInfo(rawMap2.get(key)));
         }
+        report.setDoubleDimensionRichSheetInfoMap(doubleDimensionRichSheetInfoMap);*/
+
+//        LoadTemp loadTemp = new LoadTemp(report);
 
 //        richSheetInfoList.add(new SingleDimensionRichSheetInfo(report.getSingleDimensionRawSheetInfoMap().get("PL")));
         int aaa = 1;

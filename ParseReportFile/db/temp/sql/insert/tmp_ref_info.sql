@@ -1,0 +1,23 @@
+INSERT
+  INTO tmp_ref_info
+  (
+    emitter_name,
+    file_name,
+    report_period,
+    file_date,
+    publish_date,
+    auditor,
+    factor,
+    currency
+  )
+VALUES
+  (
+    :emitter_name,
+    :file_name,
+    :report_period,
+    :file_date,
+    :publish_date,
+    :auditor,
+    :factor,
+    :currency
+  )
