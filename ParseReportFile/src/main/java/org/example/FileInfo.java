@@ -7,8 +7,8 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.example.item.*;
-import org.example.report.DoubleDimensionReportInfo;
-import org.example.report.SingleDimensionReportInfo;
+import org.example.report.DoubleDimensionReportInfoOld;
+import org.example.report.SingleDimensionReportInfoOld;
 import org.example.sheet.*;
 
 import java.io.FileInputStream;
@@ -279,11 +279,11 @@ public class FileInfo {
         this.fileFactor = fileInfo.fileFactor;
 
     }
-
-    private static BalanceSheetInfoClass getBalanceSheetInfo(SingleDimensionSheetInfoClass singleDimensionSheetInfo) {
+/*
+    private static BalanceRichSheetInfo getBalanceSheetInfo(SingleDimensionSheetInfoClass singleDimensionSheetInfo) {
 
         SingleDimensionSheetInfoClass rawBalanceSheetInfo = new SingleDimensionSheetInfoClass(singleDimensionSheetInfo);
-        BalanceSheetInfoClass richBalanceSheetInfo = new BalanceSheetInfoClass(singleDimensionSheetInfo);
+        BalanceRichSheetInfo richBalanceSheetInfo = new BalanceRichSheetInfo(singleDimensionSheetInfo);
 
         for (int k = rawBalanceSheetInfo.itemList.size() - 1; k >= 0; --k) {
             if (rawBalanceSheetInfo.itemList.get(k).isEmpty()) {
@@ -340,7 +340,7 @@ public class FileInfo {
 
         for (int ind = 0; ind < richBalanceSheetInfo.balanceItemInfoList.size(); ++ind) {
             for (int jnd = 0; jnd < richBalanceSheetInfo.reportDateList.size(); ++jnd) {
-                richBalanceSheetInfo.reportInfoList.add(new SingleDimensionReportInfo(ind, richBalanceSheetInfo.reportDateList.get(jnd), rawBalanceSheetInfo.reportInfo.get(ind).get(jnd)));
+                richBalanceSheetInfo.reportInfoList.add(new SingleDimensionReportInfoOld(ind, richBalanceSheetInfo.reportDateList.get(jnd), rawBalanceSheetInfo.reportInfo.get(ind).get(jnd)));
             }
         }
 
@@ -443,7 +443,7 @@ public class FileInfo {
 
         for (int ind = 0; ind < richPLSheetInfo.plItemInfoList.size(); ++ind) {
             for (int jnd=0; jnd < richPLSheetInfo.reportDateList.size(); ++jnd) {
-                richPLSheetInfo.reportInfoList.add(new SingleDimensionReportInfo(ind, richPLSheetInfo.reportDateList.get(jnd), rawPLSheetInfo.reportInfo.get(ind).get(jnd)));
+                richPLSheetInfo.reportInfoList.add(new SingleDimensionReportInfoOld(ind, richPLSheetInfo.reportDateList.get(jnd), rawPLSheetInfo.reportInfo.get(ind).get(jnd)));
             }
         }
 
@@ -470,7 +470,7 @@ public class FileInfo {
 
         for (int ind = 0; ind < richCFSheetInfo.cfItemInfoList.size(); ++ind) {
             for (int jnd=0; jnd < richCFSheetInfo.reportDateList.size(); ++jnd) {
-                richCFSheetInfo.reportInfoList.add(new SingleDimensionReportInfo(ind, richCFSheetInfo.reportDateList.get(jnd), rawCFSheetInfo.reportInfo.get(ind).get(jnd)));
+                richCFSheetInfo.reportInfoList.add(new SingleDimensionReportInfoOld(ind, richCFSheetInfo.reportDateList.get(jnd), rawCFSheetInfo.reportInfo.get(ind).get(jnd)));
             }
         }
 
@@ -538,7 +538,7 @@ public class FileInfo {
 
                     richCapitalSheetInfo.capitalItemInfoList.add(capitalItemInfo);
 
-                    DoubleDimensionReportInfo capitalReportInfo = new DoubleDimensionReportInfo(
+                    DoubleDimensionReportInfoOld capitalReportInfo = new DoubleDimensionReportInfoOld(
                         capitalItemInfo.horizontalItemInfo.itemIndex,
                         capitalItemInfo.verticalItemInfo.itemIndex,
                         reportDate,
@@ -561,4 +561,6 @@ public class FileInfo {
         sheetInfoMap.put("RICH_CAPITAL", getCapitalSheetInfo((DoubleDimensionSheetInfoClass) sheetInfoMap.get("CAPITAL")));
 
     }
+
+ */
 }

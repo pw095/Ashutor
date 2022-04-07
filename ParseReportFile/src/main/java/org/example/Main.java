@@ -3,15 +3,14 @@ package org.example;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.entity.LoadReference;
-import org.entity.LoadReferenceTemp;
+import org.entity.AbstractReport;
 import org.example.item.BalanceItemInfo;
 import org.example.item.CFItemInfo;
 import org.example.item.CapitalItemInfo;
 import org.example.item.PLItemInfo;
-import org.example.report.DoubleDimensionReportInfo;
+import org.example.report.DoubleDimensionReportInfoOld;
 import org.example.report.ReportInfo;
-import org.example.report.SingleDimensionReportInfo;
+import org.example.report.SingleDimensionReportInfoOld;
 import org.example.sheet.*;
 import org.excel.ReadExcelReport;
 
@@ -745,7 +744,58 @@ public class Main {
 
 //        new LoadReferenceTemp();
 //        new LoadReference();
-        new ReadExcelReport(new String(rb.getString("source_directory").getBytes(StandardCharsets.ISO_8859_1), StandardCharsets.UTF_8));
+
+/*
+        Map<Integer, Map<Integer, Map<Integer, String>>> map3d = new HashMap<>();
+        for (int ind = 0; ind < 4; ++ind) {
+            Map<Integer, Map<Integer, String>> map2d = new HashMap<>();
+            for (int jnd = 0; jnd < 3; ++jnd) {
+                Map<Integer, String> map1d = new HashMap<>();
+                for (int knd = 0; knd < 2; ++knd) {
+                    map1d.put(knd, "(" + ind + ";" + jnd + ";" + knd + ")" );
+                }
+                map2d.put(jnd, map1d);
+            }
+            map3d.put(ind, map2d);
+        }
+
+        Map<Integer, Map<Integer, Map<Integer, String>>> newMap3d = new HashMap<>();
+
+        for (int ind : map3d.keySet()) {
+            Map<Integer, Map<Integer, String>> map2d = map3d.get(ind);
+            for (int jnd : map2d.keySet()) {
+                Map<Integer, String> map1d = map2d.get(jnd);
+                for (int knd : map1d.keySet()) {
+                    Map<Integer, Map<Integer, String>> newMap2d = newMap3d.getOrDefault(knd, new HashMap<>());
+                    Map<Integer, String> newMap1d = newMap2d.getOrDefault(jnd, new HashMap<>());
+                    newMap1d.put(ind, map1d.get(knd));
+                    newMap2d.put(jnd, newMap1d);
+                    newMap3d.put(knd, newMap2d);
+                }
+            }
+        }
+*/
+
+        AbstractReport report = new ReadExcelReport(new String(rb.getString("source_directory").getBytes(StandardCharsets.ISO_8859_1), StandardCharsets.UTF_8));
+        BalanceRichSheetInfo balanceRichSheetInfo = new BalanceRichSheetInfo(report.getBalanceRawSheetInfo());
+
+        Map<String, SingleDimensionRawSheetInfo> rawMap1 = report.getSingleDimensionRawSheetInfoMap();
+        Map<String, SingleDimensionRichSheetInfo> singleDimensionRichSheetInfoMap = new HashMap<>();
+
+        for (String key : rawMap1.keySet()) {
+            singleDimensionRichSheetInfoMap.put(key, new SingleDimensionRichSheetInfo(rawMap1.get(key)));
+        }
+
+        Map<String, DoubleDimensionRawSheetInfo> rawMap2 = report.getDoubleDimensionRawSheetInfoMap();
+        Map<String, DoubleDimensionRichSheetInfo> doubleDimensionRichSheetInfoMap = new HashMap<>();
+
+        for (String key : rawMap2.keySet()) {
+            doubleDimensionRichSheetInfoMap.put(key, new DoubleDimensionRichSheetInfo(rawMap2.get(key)));
+        }
+
+//        richSheetInfoList.add(new SingleDimensionRichSheetInfo(report.getSingleDimensionRawSheetInfoMap().get("PL")));
+        int aaa = 1;
+        /*
         if (2 > 1) {
             return;
         }
@@ -771,10 +821,8 @@ public class Main {
 
         System.out.println("Size = " + fileInfoList.size());
         fileInfoList.stream().peek(p -> System.out.println(p.emitterName + " " + p.fileDate)).forEach(FileInfo::getRich);
-/*        if (2> 1) {
-            return;
-        }*/
-
+*/
+/*
         String sqlStageTmpDeletePath = Paths.get(rb.getString("stage_tmp_directory"), rb.getString("delete_directory")).toString();
         String sqlStageTmpInsertPath = Paths.get(rb.getString("stage_tmp_directory"), rb.getString("insert_directory")).toString();
         String sqlTransformLoadTmpDeletePath = Paths.get(rb.getString("transform_load_tmp_directory"), rb.getString("delete_directory")).toString();
@@ -836,7 +884,7 @@ public class Main {
                     pstmtInsert.execute();
                 }
 
-                BalanceSheetInfoClass balanceSheetInfo = (BalanceSheetInfoClass) fileInfo.sheetInfoMap.get("RICH_BALANCE");
+                BalanceRichSheetInfo balanceSheetInfo = (BalanceRichSheetInfo) fileInfo.sheetInfoMap.get("RICH_BALANCE");
 
                 try (PreparedStatement pstmtInsert = conn.prepareStatement(getQuery(Paths.get(sqlStageTmpInsertPath, "tmp_item_balance.sql")))) {
                     for (BalanceItemInfo balanceItemInfo : balanceSheetInfo.balanceItemInfoList) {
@@ -858,8 +906,8 @@ public class Main {
                     for (ReportInfo reportInfo : balanceSheetInfo.reportInfoList) {
                         pstmtInsert.setString(1, fileInfo.emitterName);
                         pstmtInsert.setString(2, fileInfo.fileName);
-                        pstmtInsert.setInt(3, ((SingleDimensionReportInfo) reportInfo).reportItemIndex);
-                        pstmtInsert.setString(4, ((SingleDimensionReportInfo) reportInfo).reportDate.format(dateFormat));
+                        pstmtInsert.setInt(3, ((SingleDimensionReportInfoOld) reportInfo).reportItemIndex);
+                        pstmtInsert.setString(4, ((SingleDimensionReportInfoOld) reportInfo).reportDate.format(dateFormat));
                         pstmtInsert.setInt(5, reportInfo.reportValue);
                         pstmtInsert.addBatch();
                     }
@@ -887,8 +935,8 @@ public class Main {
                     for (ReportInfo reportInfo : plSheetInfo.reportInfoList) {
                         pstmtInsert.setString(1, fileInfo.emitterName);
                         pstmtInsert.setString(2, fileInfo.fileName);
-                        pstmtInsert.setInt(3, ((SingleDimensionReportInfo) reportInfo).reportItemIndex);
-                        pstmtInsert.setString(4, ((SingleDimensionReportInfo) reportInfo).reportDate.format(dateFormat));
+                        pstmtInsert.setInt(3, ((SingleDimensionReportInfoOld) reportInfo).reportItemIndex);
+                        pstmtInsert.setString(4, ((SingleDimensionReportInfoOld) reportInfo).reportDate.format(dateFormat));
                         pstmtInsert.setInt(5, reportInfo.reportValue);
                         pstmtInsert.addBatch();
                     }
@@ -916,8 +964,8 @@ public class Main {
                     for (ReportInfo reportInfo : cfSheetInfo.reportInfoList) {
                         pstmtInsert.setString(1, fileInfo.emitterName);
                         pstmtInsert.setString(2, fileInfo.fileName);
-                        pstmtInsert.setInt(3, ((SingleDimensionReportInfo) reportInfo).reportItemIndex);
-                        pstmtInsert.setString(4, ((SingleDimensionReportInfo) reportInfo).reportDate.format(dateFormat));
+                        pstmtInsert.setInt(3, ((SingleDimensionReportInfoOld) reportInfo).reportItemIndex);
+                        pstmtInsert.setString(4, ((SingleDimensionReportInfoOld) reportInfo).reportDate.format(dateFormat));
                         pstmtInsert.setInt(5, reportInfo.reportValue);
                         pstmtInsert.addBatch();
                     }
@@ -945,9 +993,9 @@ public class Main {
                     for (ReportInfo reportInfo : capitalSheetInfo.reportInfoList) {
                         pstmtInsert.setString(1, fileInfo.emitterName);
                         pstmtInsert.setString(2, fileInfo.fileName);
-                        pstmtInsert.setInt(3, ((DoubleDimensionReportInfo) reportInfo).reportHorizontalItemIndex);
-                        pstmtInsert.setInt(4, ((DoubleDimensionReportInfo) reportInfo).reportVerticalItemIndex);
-                        pstmtInsert.setString(5, ((DoubleDimensionReportInfo) reportInfo).reportDate.format(dateFormat));
+                        pstmtInsert.setInt(3, ((DoubleDimensionReportInfoOld) reportInfo).reportHorizontalItemIndex);
+                        pstmtInsert.setInt(4, ((DoubleDimensionReportInfoOld) reportInfo).reportVerticalItemIndex);
+                        pstmtInsert.setString(5, ((DoubleDimensionReportInfoOld) reportInfo).reportDate.format(dateFormat));
                         pstmtInsert.setInt(6, reportInfo.reportValue);
                         pstmtInsert.addBatch();
                     }
@@ -1007,7 +1055,7 @@ public class Main {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-
+*/
     }
 
     public static String getQuery(Path filePath) {

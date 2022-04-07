@@ -31,7 +31,7 @@ public class DoubleDimensionRawSheetInfo implements SheetInfo {
         this.reportEndDateList = new ArrayList<>(reportEndDateList);
     }
 
-    public List<String> getHorizontalItemListItemList() {
+    public List<String> getHorizontalItemList() {
         return new ArrayList<>(horizontalItemList);
     }
     public void setHorizontalItemList(List<String> itemList) {
@@ -74,7 +74,7 @@ public class DoubleDimensionRawSheetInfo implements SheetInfo {
     public DoubleDimensionRawSheetInfo() {}
     public DoubleDimensionRawSheetInfo(DoubleDimensionRawSheetInfo sheetInfo) {
         setVerticalItemList(sheetInfo.getVerticalItemList());
-        setHorizontalItemList(sheetInfo.getHorizontalItemListItemList());
+        setHorizontalItemList(sheetInfo.getHorizontalItemList());
         setReportBeginDateList(sheetInfo.getReportBeginDateList());
         setReportEndDateList(sheetInfo.getReportEndDateList());
         setReportInfo(sheetInfo.getReportInfo());

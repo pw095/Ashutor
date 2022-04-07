@@ -11,7 +11,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
@@ -202,11 +201,11 @@ public class ReadExcelReport extends AbstractReport implements ReadExcel {
                 Map<Integer, Long> reportLine = new HashMap<>();
                 int rowIndex = 0;
                 int columnIndex = 0;
-                int reportDateIndex = -2;
+                int reportDateIndex = -4;
                 for (Cell cell : row) {
+                    ++reportDateIndex;
                     rowIndex = cell.getRowIndex();
                     columnIndex = cell.getColumnIndex();
-                    ++reportDateIndex;
                     if (rowIndex == 0) { // На первой строке во всех столбцах начиная со второго информация о начале отчётного периода
                         try {
                             reportBeginDateList.add(getDateCellValue(cell));

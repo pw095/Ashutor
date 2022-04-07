@@ -2,21 +2,21 @@ package org.example.report;
 
 import java.time.LocalDate;
 
-public class DoubleDimensionReportInfo extends ReportInfo {
+public class DoubleDimensionReportInfoOld extends ReportInfo {
     public int reportHorizontalItemIndex;
     public int reportVerticalItemIndex;
     public LocalDate reportDate;
 
-    public DoubleDimensionReportInfo() {}
+    public DoubleDimensionReportInfoOld() {}
 
-    public DoubleDimensionReportInfo(DoubleDimensionReportInfo doubleDimensionReportInfo) {
-        super(doubleDimensionReportInfo);
-        this.reportHorizontalItemIndex = doubleDimensionReportInfo.reportHorizontalItemIndex;
-        this.reportVerticalItemIndex = doubleDimensionReportInfo.reportVerticalItemIndex;
-        this.reportDate = doubleDimensionReportInfo.reportDate;
+    public DoubleDimensionReportInfoOld(DoubleDimensionReportInfoOld doubleDimensionReportInfoOld) {
+        super(doubleDimensionReportInfoOld);
+        this.reportHorizontalItemIndex = doubleDimensionReportInfoOld.reportHorizontalItemIndex;
+        this.reportVerticalItemIndex = doubleDimensionReportInfoOld.reportVerticalItemIndex;
+        this.reportDate = doubleDimensionReportInfoOld.reportDate;
     }
 
-    public DoubleDimensionReportInfo
+    public DoubleDimensionReportInfoOld
         (
             int reportHorizontalItemIndex,
             int reportVerticalItemIndex,

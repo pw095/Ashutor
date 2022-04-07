@@ -1,17 +1,22 @@
 package org.example.report;
 
-import java.time.LocalDate;
-
 public class ReportInfo {
 
-    public int reportValue;
+    public long reportValue;
 
+    public long getReportValue() {
+        return reportValue;
+    }
+
+    public void setReportValue(long reportValue) {
+        this.reportValue = reportValue;
+    }
     public ReportInfo() {}
 
     public ReportInfo(ReportInfo reportInfo) {
-        this.reportValue = reportInfo.reportValue;
+        setReportValue(reportInfo.getReportValue());
     }
-    public ReportInfo(int reportValue) {
-        this.reportValue = reportValue;
+    public ReportInfo(long reportValue) {
+        setReportValue(reportValue);
     }
 }
