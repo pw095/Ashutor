@@ -6,4 +6,4 @@ CREATE TABLE tmp_balance_statistic_snapshot
     report_date      TEXT,
     report_value     REAL,
     tech_update_date TEXT
-  )
+  );

@@ -1,0 +1,1 @@
+DROP TABLE IF EXISTS tmp_double_dimension_statistic_period;
