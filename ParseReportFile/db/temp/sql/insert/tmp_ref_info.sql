@@ -3,6 +3,7 @@ INSERT
   (
     emitter_name,
     file_name,
+    field,
     report_period,
     file_date,
     publish_date,
@@ -14,6 +15,7 @@ VALUES
   (
     :emitter_name,
     :file_name,
+    :field,
     :report_period,
     :file_date,
     :publish_date,

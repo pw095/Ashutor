@@ -44,15 +44,15 @@ public class LoadTemp extends ReadExcelReport implements WriteDatabase {
         String queryText = getQuery(Paths.get(insertPath, refInfoFile).toString());
 
         try (PreparedStatement preparedStatement = connection.prepareStatement(queryText)) {
-
             preparedStatement.setString(1, getEmitterName());
             preparedStatement.setString(2, getFileName());
-            preparedStatement.setString(3, getRefSheetInfo().getReportPeriod());
-            preparedStatement.setString(4, dateFormat.format(getRefSheetInfo().getFileDate()));
-            preparedStatement.setString(5, dateFormat.format(getRefSheetInfo().getPublishDate()));
-            preparedStatement.setString(6, getRefSheetInfo().getAuditor());
-            preparedStatement.setLong(7, getRefSheetInfo().getFactor());
-            preparedStatement.setString(8, getRefSheetInfo().getCurrency());
+            preparedStatement.setString(3, getRefSheetInfo().getField());
+            preparedStatement.setString(4, getRefSheetInfo().getReportPeriod());
+            preparedStatement.setString(5, dateFormat.format(getRefSheetInfo().getFileDate()));
+            preparedStatement.setString(6, dateFormat.format(getRefSheetInfo().getPublishDate()));
+            preparedStatement.setString(7, getRefSheetInfo().getAuditor());
+            preparedStatement.setLong(8, getRefSheetInfo().getFactor());
+            preparedStatement.setString(9, getRefSheetInfo().getCurrency());
             preparedStatement.execute();
 
         } catch (SQLException e) {
@@ -61,6 +61,12 @@ public class LoadTemp extends ReadExcelReport implements WriteDatabase {
 
     }
 
+    protected void clearTempTableBalanceInfo(Object object) {
+
+        Connection connection = checkConnection(object);
+        clearTemporaryTable(connection, refInfoFile);
+
+    }
 
     protected void insertTempTableBalanceInfo(Object object) {
 
@@ -82,7 +88,7 @@ public class LoadTemp extends ReadExcelReport implements WriteDatabase {
             }
         }
         {
-            String queryText = getQuery(Paths.get(insertPath, refInfoFile).toString());
+/*            String queryText = getQuery(Paths.get(insertPath, refInfoFile).toString());
 
             try (PreparedStatement preparedStatement = connection.prepareStatement(queryText)) {
                 for (Integer ind : getBalanceRichSheetInfo().getReportInfoMap().keySet()) {
@@ -94,7 +100,7 @@ public class LoadTemp extends ReadExcelReport implements WriteDatabase {
                 }
             } catch (SQLException e) {
                 throw new RuntimeException(e);
-            }
+            }*/
         }
         String queryText = getQuery(Paths.get(insertPath, refInfoFile).toString());
 

@@ -8,6 +8,7 @@ public class RefSheetInfo implements SheetInfo {
     private LocalDate fileDate;
     private LocalDate publishDate;
     private String auditor;
+    private String field;
     private long factor;
     private String currency;
 
@@ -37,6 +38,13 @@ public class RefSheetInfo implements SheetInfo {
     }
     public void setAuditor(String auditor) {
         this.auditor = auditor;
+    }
+
+    public String getField() {
+        return field;
+    }
+    public void setField(String field) {
+        this.field = field;
     }
 
     public long getFactor() {
@@ -81,9 +89,11 @@ public class RefSheetInfo implements SheetInfo {
             LocalDate publishDate,
             String auditor,
             String factor,
-            String currency
+            String currency,
+            String field
         ) {
 
+        setField(field);
         setReportPeriod(reportPeriod);
         setFileDate(fileDate);
         setPublishDate(publishDate);
@@ -101,6 +111,7 @@ public class RefSheetInfo implements SheetInfo {
         setAuditor(refSheetInfo.getAuditor());
         setFactor(refSheetInfo.getFactor());
         setCurrency(refSheetInfo.getCurrency());
+        setField(refSheetInfo.getField());
 
     }
 }

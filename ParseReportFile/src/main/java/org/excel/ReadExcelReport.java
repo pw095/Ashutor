@@ -68,6 +68,8 @@ public class ReadExcelReport extends AbstractReport implements ReadExcel {
                             case "currency":
                                 refSheetInfo.setCurrency(getStringCellValue(cell));
                                 break;
+                            case "field":
+                                refSheetInfo.setField(getStringCellValue(cell));
                             default:
                                 break;
                         }
