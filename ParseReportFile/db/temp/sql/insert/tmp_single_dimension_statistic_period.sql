@@ -7,7 +7,8 @@ INSERT
     item_index,
     report_begin_date,
     report_end_date,
-    report_value
+    report_value,
+    tech_update_date
   )
 VALUES
   (
@@ -17,5 +18,6 @@ VALUES
     :item_index,
     :report_begin_date,
     :report_end_date,
-    :report_value
+    :report_value,
+    :tech_update_date
   )

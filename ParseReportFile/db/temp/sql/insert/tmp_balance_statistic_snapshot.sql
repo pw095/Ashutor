@@ -5,7 +5,8 @@ INSERT
     file_name,
     item_index,
     report_date,
-    report_value
+    report_value,
+    tech_update_date
   )
 VALUES
   (
@@ -13,5 +14,6 @@ VALUES
     :file_name,
     :item_index,
     :report_date,
-    :report_value
+    :report_value,
+    :tech_update_date
   )

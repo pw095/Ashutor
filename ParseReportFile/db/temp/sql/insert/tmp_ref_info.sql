@@ -9,7 +9,8 @@ INSERT
     publish_date,
     auditor,
     factor,
-    currency
+    currency,
+    tech_update_date
   )
 VALUES
   (
@@ -21,5 +22,6 @@ VALUES
     :publish_date,
     :auditor,
     :factor,
-    :currency
+    :currency,
+    :tech_update_date
   )

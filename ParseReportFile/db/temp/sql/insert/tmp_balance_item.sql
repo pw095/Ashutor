@@ -9,7 +9,8 @@ INSERT
     item_header_flag,
     item_subtotal_flag,
     item_name,
-    item_pure_name
+    item_pure_name,
+    tech_update_date
   )
 VALUES
   (
@@ -21,5 +22,6 @@ VALUES
     :item_header_flag,
     :item_subtotal_flag,
     :item_name,
-    :item_pure_name
+    :item_pure_name,
+    :tech_update_date
   )

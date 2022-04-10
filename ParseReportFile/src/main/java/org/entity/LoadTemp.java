@@ -16,6 +16,7 @@ import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
@@ -28,6 +29,7 @@ public class LoadTemp extends ReadExcelReport implements WriteDatabase {
 
     static ResourceBundle rb;
     public static final DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    public static final DateTimeFormatter dateTimeFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd H:m:s");
 
     private static final String insertPath;
 
@@ -54,7 +56,7 @@ public class LoadTemp extends ReadExcelReport implements WriteDatabase {
 
     }
 
-    protected void insertTempTableRefInfo(Object object) {
+    protected void insertTempTableRefInfo(Object object, LocalDateTime localDateTime) {
 
         Connection connection = checkConnection(object);
         String queryText = getQuery(Paths.get(insertPath, refInfoFile).toString());
@@ -91,7 +93,7 @@ public class LoadTemp extends ReadExcelReport implements WriteDatabase {
 
     }
 
-    protected void insertTempTableBalance(Object object) {
+    protected void insertTempTableBalance(Object object, LocalDateTime localDateTime) {
 
         Connection connection = checkConnection(object);
 
@@ -109,6 +111,7 @@ public class LoadTemp extends ReadExcelReport implements WriteDatabase {
                     preparedStatement.setString(7, itemInfo.getItemSubtotalFlag() ? "SUBTOTAL" : "NOT_SUBTOTAL");
                     preparedStatement.setString(8, itemInfo.getItemName());
                     preparedStatement.setString(9, itemInfo.getItemPureName());
+                    preparedStatement.setString(10, dateTimeFormat.format(localDateTime));
                     preparedStatement.execute();
                 }
             } catch (SQLException e) {
@@ -127,6 +130,7 @@ public class LoadTemp extends ReadExcelReport implements WriteDatabase {
                         preparedStatement.setInt(3, ind);
                         preparedStatement.setString(4, dateFormat.format(reportInfo.getReportDate()));
                         preparedStatement.setLong(5, reportInfo.getReportValue());
+                        preparedStatement.setString(6, dateTimeFormat.format(localDateTime));
                         preparedStatement.execute();
                     }
                 }
@@ -150,7 +154,7 @@ public class LoadTemp extends ReadExcelReport implements WriteDatabase {
 
     }
 
-    protected void insertTempTableSingleDimension(Object object) {
+    protected void insertTempTableSingleDimension(Object object, LocalDateTime localDateTime) {
 
         Connection connection = checkConnection(object);
 
@@ -169,6 +173,7 @@ public class LoadTemp extends ReadExcelReport implements WriteDatabase {
                         preparedStatementItem.setInt(4, itemInfo.getItemInfo().getItemIndex());
                         preparedStatementItem.setString(5, itemInfo.getItemInfo().getItemName());
                         preparedStatementItem.setString(6, itemInfo.getItemInfo().getItemPureName());
+                        preparedStatementItem.setString(7, dateTimeFormat.format(localDateTime));
                         preparedStatementItem.execute();
                     }
 
@@ -182,6 +187,7 @@ public class LoadTemp extends ReadExcelReport implements WriteDatabase {
                             preparedStatementStatistic.setString(5, dateFormat.format(reportInfo.getReportBeginDate()));
                             preparedStatementStatistic.setString(6, dateFormat.format(reportInfo.getReportEndDate()));
                             preparedStatementStatistic.setLong(7, reportInfo.getReportValue());
+                            preparedStatementStatistic.setString(8, dateTimeFormat.format(localDateTime));
                             preparedStatementStatistic.execute();
                         }
                     }
@@ -206,7 +212,7 @@ public class LoadTemp extends ReadExcelReport implements WriteDatabase {
 
     }
 
-    protected void insertTempTableDoubleDimension(Object object) {
+    protected void insertTempTableDoubleDimension(Object object, LocalDateTime localDateTime) {
 
         Connection connection = checkConnection(object);
 
@@ -228,6 +234,7 @@ public class LoadTemp extends ReadExcelReport implements WriteDatabase {
                         preparedStatementItem.setInt(7, itemInfo.getVerticalItemInfo().getItemIndex());
                         preparedStatementItem.setString(8, itemInfo.getVerticalItemInfo().getItemName());
                         preparedStatementItem.setString(9, itemInfo.getVerticalItemInfo().getItemPureName());
+                        preparedStatementItem.setString(10, dateTimeFormat.format(localDateTime));
                         preparedStatementItem.execute();
                     }
 
@@ -244,6 +251,7 @@ public class LoadTemp extends ReadExcelReport implements WriteDatabase {
                                 preparedStatementStatistic.setString(6, dateFormat.format(reportInfo.getReportBeginDate()));
                                 preparedStatementStatistic.setString(7, dateFormat.format(reportInfo.getReportEndDate()));
                                 preparedStatementStatistic.setLong(8, reportInfo.getReportValue());
+                                preparedStatementStatistic.setString(9, dateTimeFormat.format(localDateTime));
                                 preparedStatementStatistic.execute();
                             }
                         }
@@ -261,20 +269,22 @@ public class LoadTemp extends ReadExcelReport implements WriteDatabase {
     @Override
     public void writeDestination(Connection connection) {
 
+        LocalDateTime localDateTime = LocalDateTime.now();
+
         clearTempTableRefInfo(connection);
-        insertTempTableRefInfo(connection);
+        insertTempTableRefInfo(connection, localDateTime);
 
         clearTempTableBalanceItem(connection);
         clearTempTableBalanceStatistic(connection);
-        insertTempTableBalance(connection);
+        insertTempTableBalance(connection, localDateTime);
 
         clearTempTableSingleDimensionItem(connection);
         clearTempTableSingleDimensionStatistic(connection);
-        insertTempTableSingleDimension(connection);
+        insertTempTableSingleDimension(connection, localDateTime);
 
         clearTempTableDoubleDimensionItem(connection);
         clearTempTableDoubleDimensionStatistic(connection);
-        insertTempTableDoubleDimension(connection);
+        insertTempTableDoubleDimension(connection, localDateTime);
 
     }
 

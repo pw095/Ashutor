@@ -6,7 +6,8 @@ INSERT
     report_code,
     item_index,
     item_name,
-    item_pure_name
+    item_pure_name,
+    tech_update_date
   )
 VALUES
   (
@@ -15,5 +16,6 @@ VALUES
     :report_code,
     :item_index,
     :item_name,
-    :item_pure_name
+    :item_pure_name,
+    :tech_update_date
   )

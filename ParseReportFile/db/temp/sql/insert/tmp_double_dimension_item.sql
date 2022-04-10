@@ -9,7 +9,8 @@ INSERT
     item_horizontal_pure_name,
     item_vertical_index,
     item_vertical_name,
-    item_vertical_pure_name
+    item_vertical_pure_name,
+    tech_update_date
   )
 VALUES
   (
@@ -21,5 +22,6 @@ VALUES
     :item_horizontal_pure_name,
     :item_vertical_index,
     :item_vertical_name,
-    :item_vertical_pure_name
+    :item_vertical_pure_name,
+    :tech_update_date
   )
