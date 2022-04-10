@@ -1,0 +1,19 @@
+INSERT
+  INTO tmp_single_dimension_item
+  (
+    emitter_name,
+    file_name,
+    report_code,
+    item_index,
+    item_name,
+    item_pure_name
+  )
+VALUES
+  (
+    :emitter_name,
+    :file_name,
+    :report_code,
+    :item_index,
+    :item_name,
+    :item_pure_name
+  )

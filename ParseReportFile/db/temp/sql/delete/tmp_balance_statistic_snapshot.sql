@@ -1,0 +1,1 @@
+DELETE FROM tmp_balance_statistic_snapshot

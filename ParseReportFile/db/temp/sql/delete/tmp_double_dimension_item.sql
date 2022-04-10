@@ -1,0 +1,1 @@
+DELETE FROM tmp_double_dimension_item

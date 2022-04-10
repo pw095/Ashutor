@@ -1,0 +1,25 @@
+INSERT
+  INTO tmp_double_dimension_item
+  (
+    emitter_name,
+    file_name,
+    report_code,
+    item_horizontal_index,
+    item_horizontal_name,
+    item_horizontal_pure_name,
+    item_vertical_index,
+    item_vertical_name,
+    item_vertical_pure_name
+  )
+VALUES
+  (
+    :emitter_name,
+    :file_name,
+    :report_code,
+    :item_horizontal_index,
+    :item_horizontal_name,
+    :item_horizontal_pure_name,
+    :item_vertical_index,
+    :item_vertical_name,
+    :item_vertical_pure_name
+  )

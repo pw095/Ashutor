@@ -1,0 +1,1 @@
+DELETE FROM tmp_single_dimension_statistic_period

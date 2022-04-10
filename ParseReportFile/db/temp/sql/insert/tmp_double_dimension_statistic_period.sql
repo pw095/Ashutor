@@ -1,0 +1,23 @@
+INSERT
+  INTO tmp_double_dimension_statistic_period
+  (
+    emitter_name,
+    file_name,
+    report_code,
+    item_horizontal_index,
+    item_vertical_index,
+    report_begin_date,
+    report_end_date,
+    report_value
+  )
+VALUES
+  (
+    :emitter_name,
+    :file_name,
+    :report_code,
+    :item_horizontal_index,
+    :item_vertical_index,
+    :report_begin_date,
+    :report_end_date,
+    :report_value
+  )
