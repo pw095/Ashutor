@@ -6,5 +6,6 @@ CREATE TABLE tmp_single_dimension_statistic_period
     item_index        INTEGER,
     report_begin_date TEXT,
     report_end_date   TEXT,
-    report_value      REAL
+    report_value      REAL,
+    tech_update_date  TEXT
   );

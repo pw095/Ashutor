@@ -8,5 +8,6 @@ CREATE TABLE tmp_balance_item
     item_header_flag   TEXT,
     item_subtotal_flag TEXT,
     item_name          TEXT,
-    item_pure_name     TEXT
+    item_pure_name     TEXT,
+    tech_update_date   TEXT
   );
