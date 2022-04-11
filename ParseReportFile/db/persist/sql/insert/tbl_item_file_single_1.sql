@@ -5,20 +5,23 @@ INSERT
     ifs_file_id,
     ifs_item_id,
     ifs_fine_item_id,
-    ifs_index
+    ifs_index,
+    tech_update_date
   )
 SELECT
        ifs_report_type_id,
        ifs_file_id,
        ifs_item_id,
        ifs_fine_item_id,
-       ifs_index
+       ifs_index,
+       tech_update_date
   FROM (SELECT
               report_type.report_type_id AS ifs_report_type_id,
               file.file_id               AS ifs_file_id,
               item.item_id               AS ifs_item_id,
               fine_item.fine_item_id     AS ifs_fine_item_id,
-              tmp.item_index             AS ifs_index
+              tmp.item_index             AS ifs_index,
+              tmp.tech_update_date
          FROM src.tmp_single_dimension_item tmp
               JOIN
               tbl_file file
@@ -52,4 +55,5 @@ SELECT
             ifs_file_id        = excluded.ifs_file_id,
             ifs_item_id        = excluded.ifs_item_id,
             ifs_fine_item_id   = excluded.ifs_fine_item_id,
-            ifs_index          = excluded.ifs_index;
+            ifs_index          = excluded.ifs_index,
+            tech_update_date   = excluded.tech_update_date;
