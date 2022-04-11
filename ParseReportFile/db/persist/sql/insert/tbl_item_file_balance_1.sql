@@ -1,4 +1,4 @@
-INSERT OR IGNORE
+INSERT
   INTO tbl_item_file_balance
   (
     ifb_parent_id,

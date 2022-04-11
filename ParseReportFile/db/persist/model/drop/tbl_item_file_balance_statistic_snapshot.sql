@@ -1,0 +1,1 @@
+DROP TABLE IF EXISTS tbl_item_file_balance_statistic_snapshot;
