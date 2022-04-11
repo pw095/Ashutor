@@ -1,11 +1,13 @@
 INSERT
   INTO tbl_auditor
   (
-    auditor_name
+    auditor_name,
+    tech_update_date
   )
 SELECT
-       auditor_name
-  FROM src.tmp_auditor tmp
+       auditor_name,
+       tech_update_date
+  FROM src.tmp_ref_info tmp
  WHERE NOT EXISTS(SELECT
                          NULL
                     FROM tbl_auditor

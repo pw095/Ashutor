@@ -1,11 +1,13 @@
 INSERT
   INTO tbl_field
   (
-    field_name
+    field_name,
+    tech_update_date
   )
 SELECT
-       field_name
-  FROM src.tmp_field tmp
+       field_name,
+       tech_update_date
+  FROM src.tmp_ref_info tmp
  WHERE NOT EXISTS(SELECT
                          NULL
                     FROM tbl_field

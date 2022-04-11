@@ -29,7 +29,7 @@ public class LoadTemp extends ReadExcelReport implements WriteDatabase {
 
     static ResourceBundle rb;
     public static final DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-    public static final DateTimeFormatter dateTimeFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd H:m:s");
+    public static final DateTimeFormatter dateTimeFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd H:mm:s");
 
     private static final String insertPath;
 
@@ -71,6 +71,7 @@ public class LoadTemp extends ReadExcelReport implements WriteDatabase {
             preparedStatement.setString(7, getRefSheetInfo().getAuditor());
             preparedStatement.setLong(8, getRefSheetInfo().getFactor());
             preparedStatement.setString(9, getRefSheetInfo().getCurrency());
+            preparedStatement.setString(10, dateTimeFormat.format(localDateTime));
             preparedStatement.execute();
 
         } catch (SQLException e) {

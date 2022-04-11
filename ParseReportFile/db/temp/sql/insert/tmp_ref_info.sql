@@ -3,11 +3,11 @@ INSERT
   (
     emitter_name,
     file_name,
-    field,
-    report_period,
+    field_name,
+    report_period_code,
     file_date,
     publish_date,
-    auditor,
+    auditor_name,
     factor,
     currency,
     tech_update_date
@@ -16,11 +16,11 @@ VALUES
   (
     :emitter_name,
     :file_name,
-    :field,
-    :report_period,
+    :field_name,
+    :report_period_code,
     :file_date,
     :publish_date,
-    :auditor,
+    :auditor_name,
     :factor,
     :currency,
     :tech_update_date

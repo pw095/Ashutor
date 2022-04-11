@@ -3,7 +3,7 @@ INSERT
   (
     emitter_name,
     file_name,
-    report_code,
+    report_type_code,
     item_horizontal_index,
     item_horizontal_name,
     item_horizontal_pure_name,
@@ -16,7 +16,7 @@ VALUES
   (
     :emitter_name,
     :file_name,
-    :report_code,
+    :report_type_code,
     :item_horizontal_index,
     :item_horizontal_name,
     :item_horizontal_pure_name,
