@@ -68,11 +68,11 @@ public class DoubleDimensionRichSheetInfo implements SheetInfo {
 
                 for (int knd : map1d.keySet()) { // Along horizontal dimension
 
-                    Map<Integer, Map<Integer, Long>> newMap2d = newMap3d.getOrDefault(jnd, new HashMap<>());
-                    Map<Integer, Long> newMap1d = newMap2d.getOrDefault(knd, new HashMap<>());
+                    Map<Integer, Map<Integer, Long>> newMap2d = newMap3d.getOrDefault(knd, new HashMap<>());
+                    Map<Integer, Long> newMap1d = newMap2d.getOrDefault(jnd, new HashMap<>());
                     newMap1d.put(ind, map1d.get(knd));
-                    newMap2d.put(knd, newMap1d);
-                    newMap3d.put(jnd, newMap2d);
+                    newMap2d.put(jnd, newMap1d);
+                    newMap3d.put(knd, newMap2d);
 /*                    Map<Integer, Map<Integer, Long>> newMap2d = newMap3d.getOrDefault(knd, new HashMap<>());
                     Map<Integer, Long> newMap1d = newMap2d.getOrDefault(jnd, new HashMap<>());
                     newMap1d.put(ind, map1d.get(knd));
