@@ -150,7 +150,7 @@ public final class LoadPersistent implements WriteDatabase {
 
     }
     @Override
-    public void writeDestination(Connection connection) {
+    public void execute(Connection connection) {
 
 //        executeAuxiliary(connection);
 
@@ -171,6 +171,11 @@ public final class LoadPersistent implements WriteDatabase {
         persistFileDouble1(connection);
         persistFileDoubleStatPeriod(connection);
 
+    }
+
+    @Override
+    public void writeDestination(String path) {
+        execute(path);
     }
 
     public LoadPersistent() {

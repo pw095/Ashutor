@@ -266,7 +266,7 @@ public class LoadTemp extends ReadExcelReport implements WriteDatabase {
     public void executeAuxiliary(Connection connection) {}
 
     @Override
-    public void writeDestination(Connection connection) {
+    public void execute(Connection connection) {
 
         LocalDateTime localDateTime = LocalDateTime.now();
 
@@ -285,6 +285,9 @@ public class LoadTemp extends ReadExcelReport implements WriteDatabase {
         clearTempTableDoubleDimensionStatistic(connection);
         insertTempTableDoubleDimension(connection, localDateTime);
 
+    }
+    public void writeDestination(String path) {
+        execute(path);
     }
 
     public LoadTemp(String sourcePath) {

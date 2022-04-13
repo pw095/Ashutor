@@ -55,7 +55,7 @@ SELECT
                 WHERE fine_item_code = 'TECH$BLANC') fine_item) src
  WHERE NOT EXISTS(SELECT
                          NULL
-                    FROM tbl_item_file_single
+                    FROM tbl_item_file_double
                    WHERE ifd_report_type_id          = src.ifd_report_type_id
                      AND ifd_file_id                 = src.ifd_file_id
                      AND ifd_horizontal_item_id      = src.ifd_horizontal_item_id

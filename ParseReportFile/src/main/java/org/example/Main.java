@@ -22,89 +22,13 @@ import java.util.stream.Collectors;
 public class Main {
 
     static ResourceBundle rb;
-    public static final DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+//    public static final DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd");
     static {
         rb = ResourceBundle.getBundle("application");
     }
 
-    public static class GroupItem {
-        String reportDate;
-        int id;
 
-        GroupItem(String str) {
-            String[] arr = str.split(": ");
-//            new GroupItem(arr[0], Integer.valueOf(arr[1]));
-            reportDate = arr[0];
-            id = Integer.parseInt(arr[1]);
-        }
-        GroupItem(String reportDate, int id) {
-            this.reportDate = reportDate;
-            this.id = id;
-        }
-
-    }
-
-    public static class QueryResult {
-        String fineItemCode;
-        String hierPureItemPath;
-        int level;
-        int index;
-        int cnt;
-        String groupCnct;
-        List<GroupItem> groupItemList;
-
-        QueryResult() {
-
-        }
-
-        QueryResult(String fineItemCode, String hierPureItemPath, int index, int cnt, String groupCnct) {
-
-            this.fineItemCode = fineItemCode;
-            this.hierPureItemPath = hierPureItemPath;
-            this.index = index;
-            this.cnt = cnt;
-            this.groupCnct = groupCnct;
-
-            List<String> list = Arrays.asList(groupCnct.split(", "));
-            groupItemList = new ArrayList<>();
-
-            for (String elt : list) {
-                groupItemList.add(new GroupItem(elt));
-            }
-        }
-
-        QueryResult(String fineItemCode, String hierPureItemPath, int level, int index, int cnt, String groupCnct) {
-
-            this.fineItemCode = fineItemCode;
-            this.hierPureItemPath = hierPureItemPath;
-            this.level = level;
-            this.index = index;
-            this.cnt = cnt;
-            this.groupCnct = groupCnct;
-
-            List<String> list = Arrays.asList(groupCnct.split(", "));
-            groupItemList = new ArrayList<>();
-
-            for (String elt : list) {
-                groupItemList.add(new GroupItem(elt));
-            }
-        }
-    }
-
-    public static class FineItemInfo {
-        String fineItemCode;
-        String fineItemName;
-        String hierPureItemPath;
-
-        FineItemInfo() {}
-
-        FineItemInfo(String fineItemCode, String fineItemName, String hierPureItemPath) {
-            this.fineItemCode = fineItemCode;
-            this.fineItemName = fineItemName;
-            this.hierPureItemPath = hierPureItemPath;
-        }
-    }
-
+/*
     public static void get() {
 
         String sqlGetPath = Paths.get(rb.getString("get_directory"), "export").toString();
@@ -732,43 +656,9 @@ public class Main {
         }
     }
 
-
+*/
 
     public static void main(String[] args) throws IOException{
-
-//        new LoadReferenceTemp();
-//        new LoadReference();
-
-/*
-        Map<Integer, Map<Integer, Map<Integer, String>>> map3d = new HashMap<>();
-        for (int ind = 0; ind < 4; ++ind) {
-            Map<Integer, Map<Integer, String>> map2d = new HashMap<>();
-            for (int jnd = 0; jnd < 3; ++jnd) {
-                Map<Integer, String> map1d = new HashMap<>();
-                for (int knd = 0; knd < 2; ++knd) {
-                    map1d.put(knd, "(" + ind + ";" + jnd + ";" + knd + ")" );
-                }
-                map2d.put(jnd, map1d);
-            }
-            map3d.put(ind, map2d);
-        }
-
-        Map<Integer, Map<Integer, Map<Integer, String>>> newMap3d = new HashMap<>();
-
-        for (int ind : map3d.keySet()) {
-            Map<Integer, Map<Integer, String>> map2d = map3d.get(ind);
-            for (int jnd : map2d.keySet()) {
-                Map<Integer, String> map1d = map2d.get(jnd);
-                for (int knd : map1d.keySet()) {
-                    Map<Integer, Map<Integer, String>> newMap2d = newMap3d.getOrDefault(knd, new HashMap<>());
-                    Map<Integer, String> newMap1d = newMap2d.getOrDefault(jnd, new HashMap<>());
-                    newMap1d.put(ind, map1d.get(knd));
-                    newMap2d.put(jnd, newMap1d);
-                    newMap3d.put(knd, newMap2d);
-                }
-            }
-        }
-*/
 
 //        AbstractReport report = new ReadExcelReport(new String(rb.getString("source_directory").getBytes(StandardCharsets.ISO_8859_1), StandardCharsets.UTF_8));
         LoadTemp loadTemp = new LoadTemp(new String(rb.getString("source_directory").getBytes(StandardCharsets.ISO_8859_1), StandardCharsets.UTF_8));

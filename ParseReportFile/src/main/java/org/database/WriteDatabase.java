@@ -13,20 +13,7 @@ import java.util.ResourceBundle;
 import static org.database.Query.getQuery;
 
 
-public interface WriteDatabase extends WriteDestination {
-
-    default Connection checkConnection(Object object) {
-
-        Connection connection = null;
-
-        if (object instanceof Connection) {
-            connection = (Connection) object;
-        } else {
-            throw new RuntimeException("Invalid object type!");
-        }
-
-        return connection;
-    }
+public interface WriteDatabase extends WriteDestination, ManageDatabase {
 
     default void executeBulkStatementsByPath(Connection connection, String ... statementPaths) {
 
@@ -66,23 +53,5 @@ public interface WriteDatabase extends WriteDestination {
         executeBulkStatements(connection, queryString);
 
     }
-
-    @Override
-    default void writeDestination(String destinationPath) {
-        SQLiteDataSource dataSource = new SQLiteDataSource();
-        dataSource.setUrl(destinationPath);
-
-        try (Connection connection = dataSource.getConnection()) {
-            connection.setAutoCommit(false);
-            executeAuxiliary(connection);
-            writeDestination(connection);
-            connection.commit();
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    void writeDestination(Connection connection);
-    void executeAuxiliary(Connection connection);
 
 }
