@@ -9,7 +9,7 @@ SELECT
        tech_update_date
   FROM (SELECT
                pure_item_name,
-               MAX(datetime(tech_update_date)) AS tech_update_date
+               MAX(tech_update_date) AS tech_update_date
           FROM (SELECT
                        item_pure_name   AS pure_item_name,
                        tech_update_date

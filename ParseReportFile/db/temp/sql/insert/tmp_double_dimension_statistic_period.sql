@@ -3,10 +3,10 @@ INSERT
   (
     emitter_name,
     file_name,
-    report_code,
+    report_type_code,
     item_horizontal_index,
     item_vertical_index,
-    report_begin_date,
+    report_start_date,
     report_end_date,
     report_value,
     tech_update_date
@@ -15,10 +15,10 @@ VALUES
   (
     :emitter_name,
     :file_name,
-    :report_code,
+    :report_type_code,
     :item_horizontal_index,
     :item_vertical_index,
-    :report_begin_date,
+    :report_start_date,
     :report_end_date,
     :report_value,
     :tech_update_date

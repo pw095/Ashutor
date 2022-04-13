@@ -4,6 +4,7 @@ import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.entity.AbstractReport;
+import org.entity.LoadPersistent;
 import org.entity.LoadTemp;
 import org.example.sheet.*;
 import org.excel.ReadExcelReport;
@@ -771,6 +772,8 @@ public class Main {
 
 //        AbstractReport report = new ReadExcelReport(new String(rb.getString("source_directory").getBytes(StandardCharsets.ISO_8859_1), StandardCharsets.UTF_8));
         LoadTemp loadTemp = new LoadTemp(new String(rb.getString("source_directory").getBytes(StandardCharsets.ISO_8859_1), StandardCharsets.UTF_8));
+        LoadPersistent loadPersistent = new LoadPersistent();
+
 /*        BalanceRichSheetInfo balanceRichSheetInfo = new BalanceRichSheetInfo(report.getBalanceRawSheetInfo());
         report.setBalanceRichSheetInfo(report.getBalanceRichSheetInfo());
 

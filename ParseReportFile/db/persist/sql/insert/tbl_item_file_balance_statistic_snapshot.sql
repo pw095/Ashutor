@@ -25,7 +25,7 @@ SELECT
           AND ifb.ifb_file_id = file.file_id
  WHERE NOT EXISTS(SELECT
                          NULL
-                    FROM tbl_item_file_balance_statistic
+                    FROM tbl_item_file_balance_statistic_snapshot
                    WHERE ifb_id          = ifb.ifb_id
                      AND report_date     = tmp.report_date
                      AND item_stat_value = tmp.report_value)
