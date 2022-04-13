@@ -41,6 +41,13 @@ public interface ReadExcel extends ReadSource {
         return LocalDateTime.ofInstant(date.toInstant(), ZoneId.systemDefault()).toLocalDate();
     }
 
+    default int getIntCellValue(Cell cell) {
+
+        return (int) getLongCellValue(cell);
+
+    }
+
+
     default long getLongCellValue(Cell cell) {
 
         CellType cellType = cell.getCellType();

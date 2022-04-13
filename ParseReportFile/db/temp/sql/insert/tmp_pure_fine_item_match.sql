@@ -1,0 +1,19 @@
+INSERT
+  INTO tmp_pure_fine_item_match
+  (
+    report_type_code,
+    emitter_name,
+    fine_item_code,
+    if_id,
+    file_date,
+    tech_update_date
+  )
+VALUES
+  (
+    :report_type_code,
+    :emitter_name,
+    :fine_item_code,
+    :if_id,
+    :file_date,
+    :tech_update_date
+  )

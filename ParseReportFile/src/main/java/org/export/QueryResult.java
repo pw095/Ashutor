@@ -70,7 +70,7 @@ public class QueryResult {
         this.groupItemList = groupItemList;
     }
 
-    QueryResult() {
+    public QueryResult() {
 
     }
 

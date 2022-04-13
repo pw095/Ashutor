@@ -1,14 +1,21 @@
 package org.entity;
 
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.database.ReadDatabase;
 import org.excel.WriteExcel;
 import org.export.FineItemInfo;
+import org.export.GroupItem;
 import org.export.QueryResult;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.sql.*;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static org.database.Query.getQuery;
 
@@ -62,7 +69,7 @@ public class ExportFine implements ReadDatabase, WriteExcel {
     @Override
     public void executeAuxiliary(Connection connection) {}
 
-    protected void exportEmitter(Object object) {
+    protected void readEmitter(Object object) {
 
         Connection connection = checkConnection(object);
         String queryText = getQuery(Paths.get(selectPath, emitterFile).toString());
@@ -84,7 +91,7 @@ public class ExportFine implements ReadDatabase, WriteExcel {
         }
     }
 
-    protected void exportFineItemBalance(Object object) {
+    protected void readFineItemBalance(Object object) {
 
         Connection connection = checkConnection(object);
         String queryText = getQuery(Paths.get(selectPath, balanceFineItemFile).toString());
@@ -109,7 +116,7 @@ public class ExportFine implements ReadDatabase, WriteExcel {
         }
     }
 
-    protected void exportPureFineItemMatchBalance(Object object) {
+    protected void readPureFineItemMatchBalance(Object object) {
 
         Connection connection = checkConnection(object);
         String queryText = getQuery(Paths.get(selectPath, balancePureFineItemMatchFile).toString());
@@ -150,7 +157,7 @@ public class ExportFine implements ReadDatabase, WriteExcel {
 
     }
 
-    protected void exportFineItem(Object object, String queryPath) {
+    protected void readFineItem(Object object, String queryPath, String postfix) {
 
         Connection connection = checkConnection(object);
 
@@ -173,7 +180,7 @@ public class ExportFine implements ReadDatabase, WriteExcel {
                     }
                 }
                 if (!fineItemInfoList.isEmpty()) {
-                    fineItemInfoMap.put(reportTypeCode, fineItemInfoList);
+                    fineItemInfoMap.put(reportTypeCode.concat(postfix), fineItemInfoList);
                 }
             }
         } catch (SQLException e) {
@@ -181,7 +188,7 @@ public class ExportFine implements ReadDatabase, WriteExcel {
         }
     }
 
-    protected void exportPureFineItemMatch(Object object, String queryPath) {
+    protected void readPureFineItemMatch(Object object, String queryPath, String postfix) {
 
         Connection connection = checkConnection(object);
 
@@ -218,7 +225,7 @@ public class ExportFine implements ReadDatabase, WriteExcel {
                     }
                 }
                 if (!emitterQueryResultMap.isEmpty()) {
-                    this.queryResultMap.put(reportTypeCode, emitterQueryResultMap);
+                    this.queryResultMap.put(reportTypeCode.concat(postfix), emitterQueryResultMap);
                 }
             }
 
@@ -229,22 +236,201 @@ public class ExportFine implements ReadDatabase, WriteExcel {
 
     }
 
+    protected void writeBalance(String reportPath) {
+
+        final String reportTypeCode = "BALANCE";
+        List<FineItemInfo> fineItemInfoList = fineItemInfoMap.get(reportTypeCode);
+        Map<String, List<QueryResult>> emitterQueryResult = queryResultMap.get(reportTypeCode);
+        String fileName = reportTypeCode.toLowerCase().concat(".xlsx");
+
+        try (FileOutputStream file = new FileOutputStream(new File(Paths.get(reportPath, fileName).toString()))) {
+
+            XSSFWorkbook workbook = new XSSFWorkbook();
+            XSSFSheet emitterListSheet = workbook.createSheet("Emitter List");
+
+            int rowNum = 0;
+            Row headerRow = emitterListSheet.createRow(rowNum);
+            headerRow.createCell(0).setCellValue("EmitterList");
+
+            for (String emitterName : emitterList) {
+                Row row = emitterListSheet.createRow(++rowNum);
+                row.createCell(0).setCellValue(emitterName);
+            }
+
+            XSSFSheet fineItemDictSheet = workbook.createSheet("Fine Item Dictionary");
+
+            rowNum = 0;
+            headerRow = fineItemDictSheet.createRow(rowNum);
+
+            headerRow.createCell(0).setCellValue("fine_item_code");
+            headerRow.createCell(1).setCellValue("fine_item_name");
+            headerRow.createCell(2).setCellValue("hier_pure_item_path");
+
+
+            if (fineItemInfoList != null && !fineItemInfoList.isEmpty()) {
+                for (FineItemInfo fineItemInfo : fineItemInfoList) {
+                    Row row = fineItemDictSheet.createRow(++rowNum);
+                    row.createCell(0).setCellValue(fineItemInfo.getFineItemCode());
+                    row.createCell(1).setCellValue(fineItemInfo.getFineItemName());
+                    row.createCell(2).setCellValue(fineItemInfo.getHierPureItemPath());
+                }
+            }
+            for (String emitterName : emitterQueryResult.keySet()) {
+                List<QueryResult> queryResultList = emitterQueryResult.get(emitterName);
+                List<String> arrayList = queryResultList.stream()
+                    .map(QueryResult::getGroupItemList)
+                    .flatMap(Collection::stream)
+                    .map(GroupItem::getReportDate)
+                    .distinct()
+                    .sorted()
+                    .collect(Collectors.toList());
+
+                XSSFSheet emitterBalaceInfoSheet = workbook.createSheet(emitterName);
+
+                rowNum = 0;
+
+                Row row = emitterBalaceInfoSheet.createRow(rowNum);
+
+                row.createCell(0).setCellValue("FineItemCode");
+                row.createCell(1).setCellValue("HierPureItemPath");
+                row.createCell(2).setCellValue("Level");
+                row.createCell(3).setCellValue("Index");
+                row.createCell(4).setCellValue("Count");
+
+                for (int ind=0; ind < arrayList.size(); ++ind) {
+                    row.createCell(5+ind).setCellValue(arrayList.get(ind));
+                }
+
+                for (int jnd=0; jnd < queryResultList.size(); ++jnd) {
+                    Row newRow = emitterBalaceInfoSheet.createRow(jnd+1);
+                    QueryResult queryResult = queryResultList.get(jnd);
+                    newRow.createCell(0).setCellValue(queryResult.getFineItemCode());
+                    newRow.createCell(1).setCellValue(queryResult.getHierPureItemPath());
+                    newRow.createCell(2).setCellValue(queryResult.getLevel());
+                    newRow.createCell(3).setCellValue(queryResult.getIndex());
+                    newRow.createCell(4).setCellValue(queryResult.getCnt());
+
+                    List<GroupItem> groupItemList = queryResult.getGroupItemList();
+                    for (GroupItem groupItem : groupItemList) {
+                        int knd = arrayList.indexOf(groupItem.getReportDate());
+                        newRow.createCell(5 + knd).setCellValue(groupItem.getId());
+                    }
+                }
+            }
+            workbook.write(file);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+
+
+    protected void writeCommonReport(String reportPath) {
+
+        for (String reportCode : queryResultMap.keySet()) {
+            List<FineItemInfo> fineItemInfoList = fineItemInfoMap.get(reportCode);
+            Map<String, List<QueryResult>> emitterQueryResult = queryResultMap.get(reportCode);
+
+            String fileName = reportCode.toLowerCase().concat(".xlsx");
+            try (FileOutputStream file = new FileOutputStream(new File(Paths.get(reportPath, fileName).toString()))) {
+
+                XSSFWorkbook workbook = new XSSFWorkbook();
+                XSSFSheet emitterListSheet = workbook.createSheet("Emitter List");
+
+                int rowNum = 0;
+                Row headerRow = emitterListSheet.createRow(rowNum);
+                headerRow.createCell(0).setCellValue("EmitterList");
+
+                for (String emitterName : emitterList) {
+                    Row row = emitterListSheet.createRow(++rowNum);
+                    row.createCell(0).setCellValue(emitterName);
+                }
+
+                XSSFSheet fineItemDictSheet = workbook.createSheet("Fine Item Dictionary");
+
+                rowNum = 0;
+                headerRow = fineItemDictSheet.createRow(rowNum);
+
+                headerRow.createCell(0).setCellValue("fine_item_code");
+                headerRow.createCell(1).setCellValue("fine_item_name");
+                headerRow.createCell(2).setCellValue("hier_pure_item_path");
+
+                if (fineItemInfoList != null && !fineItemInfoList.isEmpty()) {
+                    for (FineItemInfo fineItemInfo : fineItemInfoList) {
+                        Row row = fineItemDictSheet.createRow(++rowNum);
+                        row.createCell(0).setCellValue(fineItemInfo.getFineItemCode());
+                        row.createCell(1).setCellValue(fineItemInfo.getFineItemName());
+                        row.createCell(2).setCellValue(fineItemInfo.getHierPureItemPath());
+                    }
+                }
+
+                for (String emitterName : emitterQueryResult.keySet()) {
+                    List<QueryResult> queryResultList = emitterQueryResult.get(emitterName);
+                    List<String> arrayList = queryResultList.stream()
+                        .map(QueryResult::getGroupItemList)
+                        .flatMap(Collection::stream)
+                        .map(GroupItem::getReportDate)
+                        .distinct()
+                        .sorted()
+                        .collect(Collectors.toList());
+
+                    XSSFSheet emitterBalaceInfoSheet = workbook.createSheet(emitterName);
+
+                    rowNum = 0;
+
+                    Row row = emitterBalaceInfoSheet.createRow(rowNum);
+
+                    row.createCell(0).setCellValue("FineItemCode");
+                    row.createCell(1).setCellValue("HierPureItemPath");
+                    row.createCell(2).setCellValue("Index");
+                    row.createCell(3).setCellValue("Count");
+
+                    for (int ind=0; ind < arrayList.size(); ++ind) {
+                        row.createCell(4+ind).setCellValue(arrayList.get(ind));
+                    }
+
+                    for (int jnd=0; jnd < queryResultList.size(); ++jnd) {
+                        Row newRow = emitterBalaceInfoSheet.createRow(jnd+1);
+                        QueryResult queryResult = queryResultList.get(jnd);
+                        newRow.createCell(0).setCellValue(queryResult.getFineItemCode());
+                        newRow.createCell(1).setCellValue(queryResult.getHierPureItemPath());
+                        newRow.createCell(2).setCellValue(queryResult.getIndex());
+                        newRow.createCell(3).setCellValue(queryResult.getCnt());
+
+                        List<GroupItem> groupItemList = queryResult.getGroupItemList();
+                        for (GroupItem groupItem : groupItemList) {
+                            int knd = arrayList.indexOf(groupItem.getReportDate());
+                            newRow.createCell(4 + knd).setCellValue(groupItem.getId());
+                        }
+                    }
+                }
+                workbook.write(file);
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+    }
+
     @Override
     public void execute(Connection connection) {
 
-        exportEmitter(connection);
+        readEmitter(connection);
 
-        exportFineItemBalance(connection);
-        exportPureFineItemMatchBalance(connection);
+        readFineItemBalance(connection);
+        readPureFineItemMatchBalance(connection);
 
-        exportFineItem(connection, singleDimItemFile);
-        exportPureFineItemMatch(connection, singleDimPureFineItemMatchFile);
+        readFineItem(connection, singleDimItemFile, "");
+        readPureFineItemMatch(connection, singleDimPureFineItemMatchFile, "");
 
-        exportFineItem(connection, doubleDimHorizontalItemFile);
-        exportPureFineItemMatch(connection, doubleDimPureFineHorizontalItemMatchFile);
+        readFineItem(connection, doubleDimHorizontalItemFile, "_HORIZONTAL");
+        readPureFineItemMatch(connection, doubleDimPureFineHorizontalItemMatchFile, "_HORIZONTAL");
 
-        exportFineItem(connection, doubleDimVerticalItemFile);
-        exportPureFineItemMatch(connection, doubleDimPureFineVerticalItemMatchFile);
+        readFineItem(connection, doubleDimVerticalItemFile, "_VERTICAL");
+        readPureFineItemMatch(connection, doubleDimPureFineVerticalItemMatchFile, "_VERTICAL");
 
 //        exportBalance(connection);
     }
@@ -256,14 +442,16 @@ public class ExportFine implements ReadDatabase, WriteExcel {
 
     @Override
     public void writeDestination(String destinationPath) {
-
+        writeBalance(destinationPath);
+        writeCommonReport(destinationPath);
     }
 
     ExportFine() {
         readSource(rb.getString("url_persist"));
+        writeDestination(rb.getString("export_directory"));
     }
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) {
         new ExportFine();
     }
 }

@@ -27,7 +27,7 @@ public class GroupItem {
         setId(Integer.parseInt(arr[1]));
     }
 
-    GroupItem(String reportDate, int id) {
+    public GroupItem(String reportDate, int id) {
         setReportDate(reportDate);
         setId(id);
     }
