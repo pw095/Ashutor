@@ -3,6 +3,7 @@ package org.example.sheet;
 import org.apache.commons.text.similarity.LevenshteinDistance;
 import org.example.PossibleParent;
 import org.example.item.BalanceItemInfo;
+import org.example.item.ItemInfo;
 import org.example.report.SnapshotReportInfo;
 
 import java.time.LocalDate;
@@ -111,10 +112,10 @@ public class BalanceRichSheetInfo implements SheetInfo {
             if (balanceItemInfo.getItemSubtotalFlag()) {
                 int tt;
                 tt = balanceItemInfoList.stream()
-                    .filter(p -> p.getItemHeaderFlag())
+                    .filter(BalanceItemInfo::getItemHeaderFlag)
                     .filter(p -> p.getItemIndex() < balanceItemInfo.getItemIndex())
                     .filter(p -> balanceItemInfo.getItemPureName().equals("итого " + p.getItemPureName()) || balanceItemInfo.getItemPureName().equals("total " + p.getItemPureName()))
-                    .mapToInt(p -> p.getItemIndex()).findFirst().orElse(-2);
+                    .mapToInt(ItemInfo::getItemIndex).findFirst().orElse(-2);
                 balanceItemInfo.setParentItemIndex(tt);
             }
         }
@@ -126,15 +127,15 @@ public class BalanceRichSheetInfo implements SheetInfo {
                 int tt;
                 tt = balanceItemInfoList.stream()
                         // Шагаем по элементам, которые являются заголовками
-                        .filter(p -> p.getItemHeaderFlag())
+                        .filter(BalanceItemInfo::getItemHeaderFlag)
                         // Отбираем те заголовки, у которых порядковый номер меньше нашей записи
                         .filter(p -> p.getItemIndex() < balanceItemInfo.getItemIndex())
                         // Отбираем те заголовки, которые никому более присвоены не были
-                        .filter(p -> balanceItemInfoList.stream().mapToInt(t -> t.getParentItemIndex()).noneMatch(u -> u == p.getItemIndex()))
+                        .filter(p -> balanceItemInfoList.stream().mapToInt(BalanceItemInfo::getParentItemIndex).noneMatch(u -> u == p.getItemIndex()))
                         // Для каждого такого заголовка рассчитываем его путь до нашего элемента
                         .map(p -> new PossibleParent(p.getItemIndex(), levenshteinDistance.apply(p.getItemPureName(), balanceItemInfo.getItemPureName())))
                         .sorted()
-                        .mapToInt(p -> p.getParentIndex())
+                        .mapToInt(PossibleParent::getParentIndex)
                         .findFirst()
                         .orElse(-3);
                 balanceItemInfo.setParentItemIndex(tt);
@@ -153,7 +154,7 @@ public class BalanceRichSheetInfo implements SheetInfo {
                         .filter(p -> p.getItemHeaderFlag() || p.getItemSubtotalFlag())
                         .sorted()
                         .skip(kk)
-                        .map(p -> p.getItemIndex()).findFirst().orElse(-2);
+                        .map(ItemInfo::getItemIndex).findFirst().orElse(-2);
                     balanceItemInfo.setParentItemIndex(tt);
                 }
                 if (balanceItemInfo.getItemSubtotalFlag()) {

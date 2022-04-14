@@ -152,8 +152,6 @@ public final class LoadPersistent implements WriteDatabase {
     @Override
     public void execute(Connection connection) {
 
-//        executeAuxiliary(connection);
-
         persistReportType(connection);
         persistField(connection);
         persistEmitter(connection);

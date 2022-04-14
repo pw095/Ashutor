@@ -1,7 +1,6 @@
 package org.export;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class QueryResult {
@@ -82,7 +81,7 @@ public class QueryResult {
         setCnt(cnt);
         setGroupCnct(groupCnct);
 
-        List<String> list = Arrays.asList(groupCnct.split(", "));
+        String[] list = groupCnct.split(", ");
         List<GroupItem> groupItemList = new ArrayList<>();
 
         for (String elt : list) {
@@ -102,7 +101,7 @@ public class QueryResult {
         setCnt(cnt);
         setGroupCnct(groupCnct);
 
-        List<String> list = Arrays.asList(groupCnct.split(", "));
+        String[] list = groupCnct.split(", ");
         List<GroupItem> groupItemList = new ArrayList<>();
 
         for (String elt : list) {

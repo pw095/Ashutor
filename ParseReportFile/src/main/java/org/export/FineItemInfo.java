@@ -30,8 +30,6 @@ public class FineItemInfo {
         this.hierPureItemPath = hierPureItemPath;
     }
 
-    FineItemInfo() {}
-
     public FineItemInfo(String fineItemCode, String fineItemName, String hierPureItemPath) {
         setFineItemCode(fineItemCode);
         setFineItemName(fineItemName);

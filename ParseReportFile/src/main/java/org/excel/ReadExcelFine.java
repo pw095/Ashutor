@@ -13,9 +13,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.sql.Connection;
 import java.util.*;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 
@@ -107,7 +105,6 @@ public class ReadExcelFine implements ReadExcel {
                 emitterQueryResultMap.put(emitterName, queryResultList);
 
             }
-//            String reportTypeCode = Paths.get(reportPath).getFileName().toString().replace(".xlsx", "").toUpperCase();
             queryResultMap.put("BALANCE", emitterQueryResultMap);
 
         } catch (IOException e) {
