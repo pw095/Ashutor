@@ -149,10 +149,10 @@ public class ReadExcelFine implements ReadExcel {
 
                         for (int columnIndex = 0; columnIndex <= maxColumnIndex; ++columnIndex) {
                             Cell cell = row.getCell(columnIndex);
+                            String stringCellValue = null;
                             try {
                                 switch (columnIndex) {
                                     case 0: // FineItem
-                                        String stringCellValue = null;
                                         try {
                                             stringCellValue = getStringCellValue(cell);
                                         } catch (NullPointerException e) {}
@@ -168,7 +168,12 @@ public class ReadExcelFine implements ReadExcel {
                                         queryResult.setCnt(getIntCellValue(cell));
                                         break;
                                     default: // Показатели
-                                        groupItemList.add(new GroupItem(getStringCellValue(firstRow.getCell(columnIndex)), getIntCellValue(cell)));
+                                        try {
+                                            stringCellValue = getStringCellValue(cell);
+                                        } catch (RuntimeException e) {
+                                            stringCellValue = Integer.valueOf(getIntCellValue(cell)).toString();
+                                        }
+                                        groupItemList.add(new GroupItem(getStringCellValue(firstRow.getCell(columnIndex)), stringCellValue));
                                         break;
                                 }
                             } catch (RuntimeException e) {

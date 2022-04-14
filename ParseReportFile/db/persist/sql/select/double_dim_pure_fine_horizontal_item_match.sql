@@ -2,12 +2,12 @@ WITH
      w_pre AS
      (
          SELECT
-                file.file_emitter_id,
-                file.file_date,
-                ifd.ifd_id,
-                fine_item.fine_item_code,
+                MAX(file.file_emitter_id)     AS file_emitter_id,
+                MAX(file.file_date)           AS file_date,
+                GROUP_CONCAT(ifd.ifd_id, ';') AS ifd_id,
+                MAX(fine_item.fine_item_code) AS fine_item_code,
                 ifd.ifd_horizontal_index,
-                pure_item.pure_item_name
+                MAX(pure_item.pure_item_name) AS pure_item_name
            FROM tbl_item_file_double ifd
                 JOIN
                 tbl_item item
@@ -26,6 +26,8 @@ WITH
                          FROM tbl_report_type report_type
                         WHERE report_type.report_type_id = ifd.ifd_report_type_id
                           AND report_type_code = :report_type_code)
+          GROUP BY
+                   ifd.ifd_horizontal_index
      ),
      w_non_blank AS
      (

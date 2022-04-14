@@ -313,7 +313,11 @@ public class ExportFine implements ReadDatabase, WriteExcel {
                     List<GroupItem> groupItemList = queryResult.getGroupItemList();
                     for (GroupItem groupItem : groupItemList) {
                         int knd = arrayList.indexOf(groupItem.getReportDate());
-                        newRow.createCell(5 + knd).setCellValue(groupItem.getId());
+                        String groupItemString = groupItem.getIdList()
+                            .stream()
+                            .map(p -> p.toString())
+                            .collect(Collectors.joining(";"));
+                        newRow.createCell(5 + knd).setCellValue(groupItemString);
                     }
                 }
             }
@@ -330,6 +334,9 @@ public class ExportFine implements ReadDatabase, WriteExcel {
     protected void writeCommonReport(String reportPath) {
 
         for (String reportCode : queryResultMap.keySet()) {
+            if (reportCode.equals("BALANCE")) {
+                continue;
+            }
             List<FineItemInfo> fineItemInfoList = fineItemInfoMap.get(reportCode);
             Map<String, List<QueryResult>> emitterQueryResult = queryResultMap.get(reportCode);
 
@@ -402,7 +409,11 @@ public class ExportFine implements ReadDatabase, WriteExcel {
                         List<GroupItem> groupItemList = queryResult.getGroupItemList();
                         for (GroupItem groupItem : groupItemList) {
                             int knd = arrayList.indexOf(groupItem.getReportDate());
-                            newRow.createCell(4 + knd).setCellValue(groupItem.getId());
+                            String groupItemString = groupItem.getIdList()
+                                .stream()
+                                .map(p -> p.toString())
+                                .collect(Collectors.joining(";"));
+                            newRow.createCell(4 + knd).setCellValue(groupItemString);
                         }
                     }
                 }

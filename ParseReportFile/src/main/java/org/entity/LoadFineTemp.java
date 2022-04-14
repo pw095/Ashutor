@@ -59,13 +59,15 @@ public class LoadFineTemp extends ReadExcelFine implements WriteDatabase {
                     List<QueryResult> queryResultList = emitterQueryResultMap.get(emitterName);
                     for (QueryResult queryResult : queryResultList) {
                         for (GroupItem groupItem : queryResult.getGroupItemList()) {
-                            preparedStatement.setString(1, reportTypeCode);
-                            preparedStatement.setString(2, emitterName);
-                            preparedStatement.setString(3, queryResult.getFineItemCode());
-                            preparedStatement.setInt(4, groupItem.getId());
-                            preparedStatement.setString(5, groupItem.getReportDate());
-                            preparedStatement.setString(6, dateTimeFormat.format(localDateTime));
-                            preparedStatement.addBatch();
+                            for (int id : groupItem.getIdList()) {
+                                preparedStatement.setString(1, reportTypeCode);
+                                preparedStatement.setString(2, emitterName);
+                                preparedStatement.setString(3, queryResult.getFineItemCode());
+                                preparedStatement.setInt(4, id);
+                                preparedStatement.setString(5, groupItem.getReportDate());
+                                preparedStatement.setString(6, dateTimeFormat.format(localDateTime));
+                                preparedStatement.addBatch();
+                            }
                         }
                     }
                 }
@@ -100,5 +102,6 @@ public class LoadFineTemp extends ReadExcelFine implements WriteDatabase {
 
     public static void main(String[] args) {
         new LoadFineTemp(rb.getString("url_temp"));
+        new LoadFinePersistent();
     }
 }
